@@ -4,7 +4,31 @@
 <div class="tabs"><button class="tab active" data-id="calc">🧮 Calcul</button><button class="tab" data-id="second">² Seconde</button><button class="tab" data-id="function">📈 Étude</button><button class="tab" data-id="equations">🟰 Équations</button><button class="tab" data-id="matrices">🔲 Matrices</button><button class="tab" data-id="stats">📊 Stats</button></div>
 <section id="calc" class="panel active"><div class="display"><div class="expr" id="expr"></div><div class="result" id="result">0</div></div><div class="quick"><button class="key soft" onclick="add('√(')">√</button><button class="key soft" onclick="add('^2')">x²</button><button class="key soft" onclick="add('π')">π</button><button class="key soft" onclick="add('e')">e</button></div><div class="keys"><button class="key pink" onclick="clearAll()">AC</button><button class="key" onclick="add('(')">(</button><button class="key" onclick="add(')')">)</button><button class="key pink" onclick="add('/')">÷</button><button class="key" onclick="add('7')">7</button><button class="key" onclick="add('8')">8</button><button class="key" onclick="add('9')">9</button><button class="key pink" onclick="add('*')">×</button><button class="key" onclick="add('4')">4</button><button class="key" onclick="add('5')">5</button><button class="key" onclick="add('6')">6</button><button class="key pink" onclick="add('-')">−</button><button class="key" onclick="add('1')">1</button><button class="key" onclick="add('2')">2</button><button class="key" onclick="add('3')">3</button><button class="key pink" onclick="add('+')">+</button><button class="key" onclick="add('0')">0</button><button class="key" onclick="add('.')">.</button><button class="key" onclick="back()">⌫</button><button class="key pink" onclick="calculate()">=</button></div></section>
 <section id="second" class="panel"><div class="card"><h2>² Seconde fonction</h2><div class="quick"><button class="key" onclick="add('sin(')">sin</button><button class="key" onclick="add('cos(')">cos</button><button class="key" onclick="add('tan(')">tan</button><button class="key" onclick="add('ln(')">ln</button></div></div></section>
-<section id="function" class="panel"><div class="card"><h2>📈 Étude de ma fonction</h2><input class="input" placeholder="f(x) = x² - 4x + 3"><button class="action">Analyser</button></div><div class="card">V1.2 : domaine, dérivée, limites, racines, variations, extrema et courbe.</div></section>
+<section id="function" class="panel">
+  <div class="card">
+    <h2>📈 Étude de ma fonction</h2>
+
+    <input
+      id="functionInput"
+      class="input"
+      value="x² - 4x + 3"
+      placeholder="Ex. x² - 4x + 3"
+    >
+
+    <button class="action" onclick="analyzeFunction()">
+      Analyser la fonction
+    </button>
+  </div>
+
+  <div id="functionResult"></div>
+
+  <div class="card">
+    <h3>📉 Courbe</h3>
+    <canvas id="functionCanvas" width="480" height="300"
+      style="width:100%;background:#0c090d;border-radius:14px;">
+    </canvas>
+  </div>
+</section>
 <section id="equations" class="panel"><div class="card"><h2>🟰 Équations</h2><input class="input" placeholder="Ex. 2x + 6 = 14"><button class="action">Résoudre</button></div></section>
 <section id="matrices" class="panel"><div class="card"><h2>🔲 Matrices</h2><p>Addition · multiplication · déterminant · inverse · transposée</p></div></section>
 <section id="stats" class="panel"><div class="card"><h2>📊 Statistiques</h2><input class="input" placeholder="12 ; 15 ; 18 ; 20 ; 25"><button class="action">Analyser</button></div></section>
@@ -96,4 +120,156 @@ function scientific(){
 
   document.getElementById('sciResult').textContent =
     "Résultat : " + number.toExponential(8);
+}function analyzeFunction(){
+
+  let f = document.getElementById("functionInput").value
+    .toLowerCase()
+    .replaceAll(" ","")
+    .replaceAll("²","^2");
+
+  const result = document.getElementById("functionResult");
+
+  // Reconnaissance d'un trinôme ax² + bx + c
+  const match = f.match(
+    /^([+-]?\d*\.?\d*)x\^2([+-]\d*\.?\d*)x([+-]\d*\.?\d*)$/
+  );
+
+  if(!match){
+    result.innerHTML = `
+      <div class="card">
+        <h3>⚠️ Fonction non reconnue</h3>
+        <p>Pour la V1, entre une fonction sous la forme :</p>
+        <p><b>ax² + bx + c</b></p>
+        <p>Exemple : <b>x² - 4x + 3</b></p>
+      </div>
+    `;
+    return;
+  }
+
+  let a = match[1];
+  let b = match[2];
+  let c = match[3];
+
+  if(a === "" || a === "+") a = 1;
+  if(a === "-") a = -1;
+
+  b = Number(b);
+  c = Number(c);
+  a = Number(a);
+
+  const delta = b*b - 4*a*c;
+
+  let roots = "";
+
+  if(delta > 0){
+    const x1 = (-b - Math.sqrt(delta))/(2*a);
+    const x2 = (-b + Math.sqrt(delta))/(2*a);
+
+    roots = `
+      <p><b>Racines :</b>
+      x₁ = ${formatNumber(x1)},
+      x₂ = ${formatNumber(x2)}</p>
+    `;
+  }
+  else if(delta === 0){
+
+    const x = -b/(2*a);
+
+    roots = `
+      <p><b>Racine double :</b>
+      x₀ = ${formatNumber(x)}</p>
+    `;
+  }
+  else{
+    roots = `<p><b>Racines :</b> aucune racine réelle.</p>`;
+  }
+
+  const xv = -b/(2*a);
+  const yv = a*xv*xv + b*xv + c;
+
+  const extremum =
+    a > 0
+      ? `minimum : ${formatNumber(yv)}`
+      : `maximum : ${formatNumber(yv)}`;
+
+  const variations =
+    a > 0
+      ? `décroissante sur ]−∞ ; ${formatNumber(xv)}] puis croissante sur [${formatNumber(xv)} ; +∞[`
+      : `croissante sur ]−∞ ; ${formatNumber(xv)}] puis décroissante sur [${formatNumber(xv)} ; +∞[`;
+
+  result.innerHTML = `
+    <div class="card">
+      <h3>📋 Résultats</h3>
+
+      <p><b>Fonction :</b> f(x) = ${f}</p>
+
+      <p><b>Domaine :</b> ℝ</p>
+
+      <p><b>Dérivée :</b>
+      f'(x) = ${formatNumber(2*a)}x ${b >= 0 ? "+" : "−"} ${Math.abs(b)}</p>
+
+      <p><b>Discriminant :</b>
+      Δ = ${formatNumber(delta)}</p>
+
+      ${roots}
+
+      <p><b>Sommet :</b>
+      S(${formatNumber(xv)} ; ${formatNumber(yv)})</p>
+
+      <p><b>Extremum :</b> ${extremum}</p>
+
+      <p><b>Variations :</b> ${variations}</p>
+    </div>
+  `;
+
+  drawFunction(a,b,c);
+}
+
+function formatNumber(n){
+  if(Number.isInteger(n)) return n;
+  return Number(n.toFixed(6));
+}
+
+function drawFunction(a,b,c){
+
+  const canvas = document.getElementById("functionCanvas");
+  const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const scaleX = 40;
+  const scaleY = 30;
+
+  const originX = W/2;
+  const originY = H/2;
+
+  // Axes
+  ctx.beginPath();
+  ctx.moveTo(0,originY);
+  ctx.lineTo(W,originY);
+  ctx.moveTo(originX,0);
+  ctx.lineTo(originX,H);
+  ctx.stroke();
+
+  // Courbe
+  ctx.beginPath();
+
+  for(let px=0; px<W; px++){
+
+    const x = (px-originX)/scaleX;
+    const y = a*x*x+b*x+c;
+
+    const py = originY-y*scaleY;
+
+    if(px===0){
+      ctx.moveTo(px,py);
+    }else{
+      ctx.lineTo(px,py);
+    }
+  }
+
+  ctx.stroke();
 }</script></body></html>
