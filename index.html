@@ -229,24 +229,44 @@ function formatNumber(n){
   if(Number.isInteger(n)) return n;
   return Number(n.toFixed(6));
 }
-
 function drawFunction(a,b,c){
 
   const canvas = document.getElementById("functionCanvas");
   const ctx = canvas.getContext("2d");
 
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
   const W = canvas.width;
   const H = canvas.height;
+
+  ctx.clearRect(0,0,W,H);
 
   const scaleX = 40;
   const scaleY = 30;
 
-  const originX = W/2;
-  const originY = H/2;
+  const originX = W / 2;
+  const originY = H / 2;
+
+  // Grille
+  ctx.strokeStyle = "#241b23";
+  ctx.lineWidth = 1;
+
+  for(let x = originX % scaleX; x < W; x += scaleX){
+    ctx.beginPath();
+    ctx.moveTo(x,0);
+    ctx.lineTo(x,H);
+    ctx.stroke();
+  }
+
+  for(let y = originY % scaleY; y < H; y += scaleY){
+    ctx.beginPath();
+    ctx.moveTo(0,y);
+    ctx.lineTo(W,y);
+    ctx.stroke();
+  }
 
   // Axes
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+
   ctx.beginPath();
   ctx.moveTo(0,originY);
   ctx.lineTo(W,originY);
@@ -254,7 +274,58 @@ function drawFunction(a,b,c){
   ctx.lineTo(originX,H);
   ctx.stroke();
 
+  // Graduations + nombres
+  ctx.fillStyle = "#aaa";
+  ctx.font = "11px Arial";
+  ctx.lineWidth = 1;
+
+  // Axe X
+  for(let i = -10; i <= 10; i++){
+
+    if(i === 0) continue;
+
+    const px = originX + i * scaleX;
+
+    if(px >= 0 && px <= W){
+
+      ctx.beginPath();
+      ctx.moveTo(px,originY-4);
+      ctx.lineTo(px,originY+4);
+      ctx.stroke();
+
+      ctx.fillText(i,px-4,originY+17);
+    }
+  }
+
+  // Axe Y
+  for(let i = -5; i <= 5; i++){
+
+    if(i === 0) continue;
+
+    const py = originY - i * scaleY;
+
+    if(py >= 0 && py <= H){
+
+      ctx.beginPath();
+      ctx.moveTo(originX-4,py);
+      ctx.lineTo(originX+4,py);
+      ctx.stroke();
+
+      ctx.fillText(i,originX+7,py+4);
+    }
+  }
+
+  // Labels des axes
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 13px Arial";
+
+  ctx.fillText("x",W-15,originY-8);
+  ctx.fillText("y",originX+8,15);
+
   // Courbe
+  ctx.strokeStyle = "#ff4fa3";
+  ctx.lineWidth = 3;
+
   ctx.beginPath();
 
   for(let px=0; px<W; px++){
@@ -272,4 +343,56 @@ function drawFunction(a,b,c){
   }
 
   ctx.stroke();
+
+  // Sommet
+  const xv = -b/(2*a);
+  const yv = a*xv*xv+b*xv+c;
+
+  const sx = originX + xv*scaleX;
+  const sy = originY - yv*scaleY;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(sx,sy,6,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ff4fa3";
+  ctx.font = "bold 13px Arial";
+  ctx.fillText(
+    `S(${formatNumber(xv)} ; ${formatNumber(yv)})`,
+    sx+9,
+    sy-10
+  );
+
+  // Racines
+  const delta = b*b-4*a*c;
+
+  if(delta >= 0){
+
+    const x1 = (-b-Math.sqrt(delta))/(2*a);
+    const x2 = (-b+Math.sqrt(delta))/(2*a);
+
+    drawPoint(x1,0,`A(${formatNumber(x1)} ; 0)`);
+    
+    if(delta > 0){
+      drawPoint(x2,0,`B(${formatNumber(x2)} ; 0)`);
+    }
+  }
+
+  function drawPoint(x,y,label){
+
+    const px = originX+x*scaleX;
+    const py = originY-y*scaleY;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(px,py,5,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = "#ff4fa3";
+    ctx.font = "bold 12px Arial";
+    ctx.fillText(label,px+7,py-8);
+  }
+}
+
 }</script></body></html>
