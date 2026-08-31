@@ -1,14 +1,17 @@
-const CACHE_NAME = "rea-calc-v1";
+const CACHE_NAME = "calculatrice-v1";
 
-const FILES = [
+const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./style.css",
+  "./script.js"
 ];
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES))
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(FILES_TO_CACHE);
+    })
   );
 });
 
