@@ -83,6 +83,56 @@
     <p>Longueur · masse · temps · vitesse · température · surface · volume</p>
   </div>
 </section>
+  <section id="base" class="panel">
+  <div class="card">
+    <h2>🔢 Conversion en base b</h2>
+
+    <input
+      id="baseNumber"
+      class="input"
+      placeholder="Ex. 101101"
+    >
+
+    <input
+      id="baseFrom"
+      class="input"
+      type="number"
+      min="2"
+      max="36"
+      value="2"
+      style="margin-top:8px"
+    >
+
+    <p style="color:#aaa;font-size:13px">
+      Base de départ (2 à 36)
+    </p>
+
+    <input
+      id="baseTo"
+      class="input"
+      type="number"
+      min="2"
+      max="36"
+      value="10"
+    >
+
+    <p style="color:#aaa;font-size:13px">
+      Base d'arrivée (2 à 36)
+    </p>
+
+    <button class="action" onclick="convertBase()">
+      Convertir
+    </button>
+
+    <div
+      id="baseResult"
+      style="margin-top:16px;
+             font-size:20px;
+             font-weight:800;
+             text-align:center">
+    </div>
+  </div>
+</section>
 <nav class="nav"><button data-id="base"><b>🔢</b>Base b</button><button data-id="demo"><b>∴</b>Démonstration</button><button data-id="sci"><b>✖️</b>Scientifique</button><button data-id="pixels"><b>🖼️</b>Pixels</button><button data-id="map"><b>🗺️</b>Cartographie</button><button data-id="conv"><b>🔄</b>Conversions</button></nav></main>
 <script>let exp='';const E=document.getElementById('expr'),R=document.getElementById('result');function show(){E.textContent=exp.replaceAll('*','×').replaceAll('/','÷')}function add(x){exp+=x;R.textContent=exp;show()}function clearAll(){exp='';R.textContent='0';show()}function back(){exp=exp.slice(0,-1);R.textContent=exp||'0';show()}function calculate(){try{let x=exp.replaceAll('π','Math.PI').replaceAll('^2','**').replaceAll('√','Math.sqrt').replaceAll('sin','Math.sin').replaceAll('cos','Math.cos').replaceAll('tan','Math.tan').replaceAll('ln','Math.log');let v=Function('return ('+x+')')();if(!Number.isFinite(v))throw 0;R.textContent=Number.isInteger(v)?v:Number(v.toFixed(12))}catch{R.textContent='Erreur'}}function activate(id){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('[data-id]').forEach(b=>b.classList.toggle('active',b.dataset.id===id))}document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>activate(b.dataset.id));function convertBase(){
   try{
@@ -277,5 +327,35 @@ function drawFunction(a,b,c){
 
   ctx.stroke();
 }
+function convertBase(){
 
+  const number = document.getElementById("baseNumber").value.trim().toUpperCase();
+
+  const from = parseInt(document.getElementById("baseFrom").value);
+  const to = parseInt(document.getElementById("baseTo").value);
+
+  const result = document.getElementById("baseResult");
+
+  if(!number){
+    result.textContent = "Entre un nombre.";
+    return;
+  }
+
+  if(from < 2 || from > 36 || to < 2 || to > 36){
+    result.textContent = "Les bases doivent être entre 2 et 36.";
+    return;
+  }
+
+  const decimal = parseInt(number, from);
+
+  if(Number.isNaN(decimal)){
+    result.textContent = "Nombre invalide pour cette base.";
+    return;
+  }
+
+  const converted = decimal.toString(to).toUpperCase();
+
+  result.innerHTML =
+    `${number}<sub>${from}</sub> = ${converted}<sub>${to}</sub>`;
+}
 </script></body></html>
