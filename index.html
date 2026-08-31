@@ -8,5 +8,92 @@
 <section id="equations" class="panel"><div class="card"><h2>🟰 Équations</h2><input class="input" placeholder="Ex. 2x + 6 = 14"><button class="action">Résoudre</button></div></section>
 <section id="matrices" class="panel"><div class="card"><h2>🔲 Matrices</h2><p>Addition · multiplication · déterminant · inverse · transposée</p></div></section>
 <section id="stats" class="panel"><div class="card"><h2>📊 Statistiques</h2><input class="input" placeholder="12 ; 15 ; 18 ; 20 ; 25"><button class="action">Analyser</button></div></section>
+  <section id="base" class="panel">
+  <div class="card">
+    <h2>🔢 Conversion en base b</h2>
+    <input id="baseNumber" class="input" placeholder="Nombre, ex. 101101">
+    <input id="baseFrom" class="input" style="margin-top:8px" placeholder="Base actuelle : 2">
+    <input id="baseTo" class="input" style="margin-top:8px" placeholder="Base cible : 10">
+    <button class="action" onclick="convertBase()">Convertir</button>
+    <p id="baseResult"></p>
+  </div>
+</section>
+
+<section id="demo" class="panel">
+  <div class="card">
+    <h2>∴ Démonstration</h2>
+    <input class="input" placeholder="Ex. Démontrer que x² ≥ 0">
+    <button class="action">Démontrer</button>
+    <p>Le moteur de démonstration sera développé dans une prochaine version.</p>
+  </div>
+</section>
+
+<section id="sci" class="panel">
+  <div class="card">
+    <h2>✖️ Écriture scientifique</h2>
+    <input id="sciInput" class="input" placeholder="Ex. 1250000">
+    <button class="action" onclick="scientific()">Convertir</button>
+    <p id="sciResult"></p>
+  </div>
+</section>
+
+<section id="pixels" class="panel">
+  <div class="card">
+    <h2>🖼️ Étude des pixels</h2>
+    <input type="file" id="imageInput" accept="image/*" class="input">
+    <p id="pixelResult">Choisis une image pour commencer l'analyse.</p>
+  </div>
+</section>
+
+<section id="map" class="panel">
+  <div class="card">
+    <h2>🗺️ Cartographie du milieu</h2>
+    <p>Analyse et représentation du milieu à partir de données ou de coordonnées.</p>
+    <button class="action">Commencer la cartographie</button>
+  </div>
+</section>
+
+<section id="conv" class="panel">
+  <div class="card">
+    <h2>🔄 Conversions</h2>
+    <p>Longueur · masse · temps · vitesse · température · surface · volume</p>
+  </div>
+</section>
 <nav class="nav"><button data-id="base"><b>🔢</b>Base b</button><button data-id="demo"><b>∴</b>Démonstration</button><button data-id="sci"><b>✖️</b>Scientifique</button><button data-id="pixels"><b>🖼️</b>Pixels</button><button data-id="map"><b>🗺️</b>Cartographie</button><button data-id="conv"><b>🔄</b>Conversions</button></nav></main>
-<script>let exp='';const E=document.getElementById('expr'),R=document.getElementById('result');function show(){E.textContent=exp.replaceAll('*','×').replaceAll('/','÷')}function add(x){exp+=x;R.textContent=exp;show()}function clearAll(){exp='';R.textContent='0';show()}function back(){exp=exp.slice(0,-1);R.textContent=exp||'0';show()}function calculate(){try{let x=exp.replaceAll('π','Math.PI').replaceAll('^2','**').replaceAll('√','Math.sqrt').replaceAll('sin','Math.sin').replaceAll('cos','Math.cos').replaceAll('tan','Math.tan').replaceAll('ln','Math.log');let v=Function('return ('+x+')')();if(!Number.isFinite(v))throw 0;R.textContent=Number.isInteger(v)?v:Number(v.toFixed(12))}catch{R.textContent='Erreur'}}function activate(id){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('[data-id]').forEach(b=>b.classList.toggle('active',b.dataset.id===id))}document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>activate(b.dataset.id));</script></body></html>
+<script>let exp='';const E=document.getElementById('expr'),R=document.getElementById('result');function show(){E.textContent=exp.replaceAll('*','×').replaceAll('/','÷')}function add(x){exp+=x;R.textContent=exp;show()}function clearAll(){exp='';R.textContent='0';show()}function back(){exp=exp.slice(0,-1);R.textContent=exp||'0';show()}function calculate(){try{let x=exp.replaceAll('π','Math.PI').replaceAll('^2','**').replaceAll('√','Math.sqrt').replaceAll('sin','Math.sin').replaceAll('cos','Math.cos').replaceAll('tan','Math.tan').replaceAll('ln','Math.log');let v=Function('return ('+x+')')();if(!Number.isFinite(v))throw 0;R.textContent=Number.isInteger(v)?v:Number(v.toFixed(12))}catch{R.textContent='Erreur'}}function activate(id){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('[data-id]').forEach(b=>b.classList.toggle('active',b.dataset.id===id))}document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>activate(b.dataset.id));function convertBase(){
+  try{
+    const number = document.getElementById('baseNumber').value.trim();
+    const from = parseInt(document.getElementById('baseFrom').value);
+    const to = parseInt(document.getElementById('baseTo').value);
+
+    if(!number || from < 2 || from > 36 || to < 2 || to > 36){
+      throw new Error();
+    }
+
+    const decimal = parseInt(number, from);
+
+    if(Number.isNaN(decimal)){
+      throw new Error();
+    }
+
+    document.getElementById('baseResult').textContent =
+      "Résultat : " + decimal.toString(to).toUpperCase();
+  }catch{
+    document.getElementById('baseResult').textContent =
+      "Erreur : vérifie le nombre et les bases.";
+  }
+}
+
+function scientific(){
+  const input = document.getElementById('sciInput').value.trim();
+  const number = Number(input);
+
+  if(!Number.isFinite(number)){
+    document.getElementById('sciResult').textContent =
+      "Erreur : entre un nombre valide.";
+    return;
+  }
+
+  document.getElementById('sciResult').textContent =
+    "Résultat : " + number.toExponential(8);
+}</script></body></html>
