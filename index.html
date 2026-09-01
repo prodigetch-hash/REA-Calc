@@ -45,7 +45,29 @@
   </div>
 
 </section>
-<section id="equations" class="panel"><div class="card"><h2>🟰 Équations</h2><input class="input" placeholder="Ex. 2x + 6 = 14"><button class="action">Résoudre</button></div></section>
+<section id="equations" class="panel">
+
+  <div class="card">
+
+    <h2>🟰 Résolution d'équations</h2>
+
+    <input
+      id="equationInput"
+      class="input"
+      placeholder="Ex. 2x + 6 = 14"
+    >
+
+    <button
+      class="action"
+      onclick="solveEquationV2()">
+      🔍 Résoudre
+    </button>
+
+  </div>
+
+  <div id="equationResult"></div>
+
+</section>
 <section id="matrices" class="panel"><div class="card"><h2>🔲 Matrices</h2><p>Addition · multiplication · déterminant · inverse · transposée</p></div></section>
 <section id="stats" class="panel"><div class="card"><h2>📊 Statistiques</h2><input class="input" placeholder="12 ; 15 ; 18 ; 20 ; 25"><button class="action">Analyser</button></div></section>
   <section id="base" class="panel">
@@ -2299,5 +2321,597 @@ function drawSpecialPoints(
       );
     }
   }
+}
+  /* =========================================================
+   RÉA-CALC — ÉQUATIONS V2
+   ========================================================= */
+
+function solveEquationV2(){
+
+  const input =
+    document.getElementById("equationInput")
+      .value.trim();
+
+  const result =
+    document.getElementById("equationResult");
+
+  if(!input){
+
+    result.innerHTML = `
+      <div class="card">
+        ⚠️ Entre une équation.
+      </div>
+    `;
+
+    return;
+  }
+
+  if(!input.includes("=")){
+
+    result.innerHTML = `
+      <div class="card">
+        ❌ L'équation doit contenir <b>=</b>.
+        <br><br>
+        Exemple :
+        <b>2x+6=14</b>
+      </div>
+    `;
+
+    return;
+  }
+
+  const parts=input.split("=");
+
+  if(parts.length!==2){
+
+    result.innerHTML = `
+      <div class="card">
+        ❌ Équation invalide.
+      </div>
+    `;
+
+    return;
+  }
+
+  const left=parts[0];
+  const right=parts[1];
+
+  /* =========================
+     SYSTÈME
+     ========================= */
+
+  if(input.includes(";")){
+
+    solveSystemV2(input,result);
+    return;
+  }
+
+  /* =========================
+     POLYNÔME
+     ========================= */
+
+  const L=parsePolynomialAdvanced(left);
+  const R=parsePolynomialAdvanced(right);
+
+  if(!L || !R){
+
+    solveSpecialEquation(input,result);
+    return;
+  }
+
+  const a=L.a2-R.a2;
+  const b=L.a-R.a;
+  const c=L.c-R.c;
+
+  /* =========================
+     IDENTITÉ
+     ========================= */
+
+  if(
+    Math.abs(a)<1e-12 &&
+    Math.abs(b)<1e-12
+  ){
+
+    if(Math.abs(c)<1e-12){
+
+      result.innerHTML=`
+        ${demoCard(
+          "♾️",
+          "Résultat",
+          "Cette équation est vraie pour tout réel."
+        )}
+      `;
+
+    }else{
+
+      result.innerHTML=`
+        ${demoCard(
+          "∅",
+          "Résultat",
+          "Cette équation n'admet aucune solution."
+        )}
+      `;
+    }
+
+    return;
+  }
+
+  /* =========================
+     PREMIER DEGRÉ
+     ========================= */
+
+  if(Math.abs(a)<1e-12){
+
+    const x=-c/b;
+
+    result.innerHTML=`
+
+      ${demoCard(
+        "📝",
+        "Équation",
+        `${input}`
+      )}
+
+      ${demoCard(
+        "1️⃣",
+        "Réduction",
+        `${formatN(b)}x = ${formatN(-c)}`
+      )}
+
+      ${demoCard(
+        "2️⃣",
+        "Isolement de x",
+        `x = ${formatN(-c)} ÷ ${formatN(b)}`
+      )}
+
+      ${demoCard(
+        "🎯",
+        "Solution",
+        `<span class="demo-solution">
+          x = ${formatN(x)}
+        </span>`
+      )}
+
+      ${demoCard(
+        "✓",
+        "Vérification",
+        `${formatN(x)} vérifie l'équation.`
+      )}
+
+    `;
+
+    return;
+  }
+
+  /* =========================
+     SECOND DEGRÉ
+     ========================= */
+
+  const delta=b*b-4*a*c;
+
+  let html=`
+
+    ${demoCard(
+      "📝",
+      "Forme réduite",
+      `${formatQuadraticAdvanced(a,b,c)} = 0`
+    )}
+
+    ${demoCard(
+      "Δ",
+      "Discriminant",
+      `
+      Δ = b² − 4ac<br>
+      Δ = (${formatN(b)})²
+      − 4×${formatN(a)}×${formatN(c)}<br>
+      <b>Δ = ${formatN(delta)}</b>
+      `
+    )}
+
+  `;
+
+  if(delta<0){
+
+    html+=demoCard(
+      "❌",
+      "Conclusion",
+      "Δ < 0 : aucune solution réelle."
+    );
+
+  }
+
+  else if(Math.abs(delta)<1e-12){
+
+    const x=-b/(2*a);
+
+    html+=`
+
+      ${demoCard(
+        "1️⃣",
+        "Racine double",
+        `x₀ = −b/(2a)<br>
+         x₀ = ${formatN(x)}`
+      )}
+
+      ${demoCard(
+        "🎯",
+        "Solution",
+        `<span class="demo-solution">
+          x₀ = ${formatN(x)}
+        </span>`
+      )}
+
+    `;
+
+  }
+
+  else{
+
+    const sqrtDelta=Math.sqrt(delta);
+
+    const x1=(-b-sqrtDelta)/(2*a);
+    const x2=(-b+sqrtDelta)/(2*a);
+
+    html+=`
+
+      ${demoCard(
+        "1️⃣",
+        "Calcul de √Δ",
+        `√Δ = ${formatN(sqrtDelta)}`
+      )}
+
+      ${demoCard(
+        "2️⃣",
+        "Première solution",
+        `
+        x₁ = (−b−√Δ)/(2a)<br>
+        x₁ = ${formatN(x1)}
+        `
+      )}
+
+      ${demoCard(
+        "3️⃣",
+        "Deuxième solution",
+        `
+        x₂ = (−b+√Δ)/(2a)<br>
+        x₂ = ${formatN(x2)}
+        `
+      )}
+
+      ${demoCard(
+        "🎯",
+        "Solutions",
+        `<span class="demo-solution">
+          x₁ = ${formatN(x1)}<br>
+          x₂ = ${formatN(x2)}
+        </span>`
+      )}
+
+    `;
+  }
+
+  result.innerHTML=html;
+}
+
+
+/* =========================================================
+   SYSTÈMES 2×2
+   Format :
+   2x+3y=7 ; x-y=1
+   ========================================================= */
+
+function solveSystemV2(input,result){
+
+  const equations=input
+    .split(";")
+    .map(e=>e.trim());
+
+  if(equations.length!==2){
+
+    result.innerHTML=`
+      <div class="card">
+        ❌ Entre deux équations séparées par <b>;</b>.
+        <br><br>
+        Exemple :
+        <b>2x+3y=7 ; x-y=1</b>
+      </div>
+    `;
+
+    return;
+  }
+
+  const e1=equations[0].split("=");
+  const e2=equations[1].split("=");
+
+  if(e1.length!==2 || e2.length!==2){
+
+    result.innerHTML=`
+      <div class="card">
+        ❌ Système invalide.
+      </div>
+    `;
+
+    return;
+  }
+
+  const p1=parseLinearXY(
+    e1[0],
+    e1[1]
+  );
+
+  const p2=parseLinearXY(
+    e2[0],
+    e2[1]
+  );
+
+  if(!p1 || !p2){
+
+    result.innerHTML=`
+      <div class="card">
+        ❌ Système non reconnu.
+      </div>
+    `;
+
+    return;
+  }
+
+  const D=
+    p1.a*p2.b-
+    p2.a*p1.b;
+
+  const Dx=
+    p1.c*p2.b-
+    p2.c*p1.b;
+
+  const Dy=
+    p1.a*p2.c-
+    p2.a*p1.c;
+
+  if(Math.abs(D)<1e-12){
+
+    result.innerHTML=`
+      ${demoCard(
+        "⚠️",
+        "Résultat",
+        "Le système n'a pas une solution unique."
+      )}
+    `;
+
+    return;
+  }
+
+  const x=Dx/D;
+  const y=Dy/D;
+
+  result.innerHTML=`
+
+    ${demoCard(
+      "📝",
+      "Système",
+      `
+      ${equations[0]}<br>
+      ${equations[1]}
+      `
+    )}
+
+    ${demoCard(
+      "1️⃣",
+      "Déterminant principal",
+      `D = ${formatN(D)}`
+    )}
+
+    ${demoCard(
+      "2️⃣",
+      "Déterminant de x",
+      `Dₓ = ${formatN(Dx)}`
+    )}
+
+    ${demoCard(
+      "3️⃣",
+      "Déterminant de y",
+      `Dᵧ = ${formatN(Dy)}`
+    )}
+
+    ${demoCard(
+      "🎯",
+      "Solution",
+      `
+      <span class="demo-solution">
+      x = ${formatN(x)}<br>
+      y = ${formatN(y)}
+      </span>
+      `
+    )}
+
+  `;
+}
+
+
+/* =========================================================
+   PARSING AX + BY = C
+   ========================================================= */
+
+function parseLinearXY(left,right){
+
+  const expression=
+    left.replace(/\s/g,"");
+
+  const c=Number(
+    right.replace(/\s/g,"")
+  );
+
+  if(!Number.isFinite(c))
+    return null;
+
+  let a=0;
+  let b=0;
+
+  const terms=
+    expression
+      .replace(/-/g,"+-")
+      .split("+")
+      .filter(Boolean);
+
+  for(let term of terms){
+
+    if(term.includes("x")){
+
+      let value=
+        term.replace("x","");
+
+      if(value==="" || value==="+")
+        value=1;
+
+      else if(value==="-")
+        value=-1;
+
+      else
+        value=Number(value);
+
+      if(!Number.isFinite(value))
+        return null;
+
+      a+=value;
+
+    }else if(term.includes("y")){
+
+      let value=
+        term.replace("y","");
+
+      if(value==="" || value==="+")
+        value=1;
+
+      else if(value==="-")
+        value=-1;
+
+      else
+        value=Number(value);
+
+      if(!Number.isFinite(value))
+        return null;
+
+      b+=value;
+
+    }else{
+
+      /* constante déplacée à droite */
+
+      const value=Number(term);
+
+      if(!Number.isFinite(value))
+        return null;
+
+      /* ax+by+k=c */
+      /* devient ax+by=c-k */
+
+      return parseLinearXY(
+        expression.replace(term,""),
+        c-value
+      );
+    }
+  }
+
+  return {
+    a:a,
+    b:b,
+    c:c
+  };
+}
+
+
+/* =========================================================
+   ÉQUATIONS SPÉCIALES
+   ========================================================= */
+
+function solveSpecialEquation(input,result){
+
+  const parts=input.split("=");
+
+  if(parts.length!==2){
+
+    result.innerHTML=`
+      <div class="card">
+        ❌ Équation invalide.
+      </div>
+    `;
+
+    return;
+  }
+
+  const left=parts[0];
+  const right=parts[1];
+
+  /* x² = nombre */
+
+  const m=
+    left.match(/^x\^2$/);
+
+  if(m){
+
+    const n=Number(right);
+
+    if(Number.isFinite(n)){
+
+      if(n<0){
+
+        result.innerHTML=`
+          ${demoCard(
+            "❌",
+            "Résultat",
+            "Aucune solution réelle."
+          )}
+        `;
+
+      }else{
+
+        const r=Math.sqrt(n);
+
+        result.innerHTML=`
+
+          ${demoCard(
+            "📝",
+            "Équation",
+            input
+          )}
+
+          ${demoCard(
+            "1️⃣",
+            "Racine carrée",
+            `√${formatN(n)} = ${formatN(r)}`
+          )}
+
+          ${demoCard(
+            "🎯",
+            "Solutions",
+            `
+            <span class="demo-solution">
+            x₁ = ${formatN(r)}<br>
+            x₂ = −${formatN(r)}
+            </span>
+            `
+          )}
+
+        `;
+      }
+
+      return;
+    }
+  }
+
+  result.innerHTML=`
+
+    ${demoCard(
+      "🤖",
+      "Analyse",
+      "Cette équation nécessite une méthode symbolique plus avancée."
+    )}
+
+    ${demoCard(
+      "💡",
+      "Conseil",
+      "Essaie une équation du type 2x+6=14 ou x^2−4x+3=0."
+    )}
+
+  `;
 }
 </script></body></html>
