@@ -1345,440 +1345,586 @@ function demoCard(icon,title,content=""){
   /* =========================================================
    RÉA-CALC — ÉTUDE AUTOMATIQUE DE FONCTION V2
    ========================================================= */
+/* =========================================================
+   RÉA-CALC — ÉTUDE DE FONCTION V3
+   Polynômes • rationnelles • racine • ln • exp • trigonométrie
+   ========================================================= */
 
 function analyzeFunction(){
 
-  const input = document
-    .getElementById("functionInput")
-    .value
-    .trim()
-    .replace(/\s+/g,"");
+  const input = document.getElementById("functionInput").value.trim();
 
-  const output =
-    document.getElementById("functionAnalysis");
+  const output = document.getElementById("functionAnalysis");
 
   if(!input){
-
     output.innerHTML = `
       <div class="card">
         ⚠️ Entre une fonction, par exemple :
+        <br><br>
         <b>x^2-4x+3</b>
-      </div>
-    `;
-
+      </div>`;
     return;
   }
 
-  const p = parsePolynomialAdvanced(input);
+  const f = normalizeFunction(input);
 
-  if(!p){
+  let domain = getDomain(f);
+  let derivative = derivativeFunction(f);
+  let roots = findRoots(f);
+  let limits = getLimits(f);
+  let extrema = findExtrema(f);
 
-    output.innerHTML = `
-      <div class="card">
-        ❌ Fonction non reconnue.
-        <br><br>
-        Pour cette version, utilise un polynôme comme :
-        <br><br>
-        <b>x^2-4x+3</b>
-        <br>
-        <b>2x^2+3x-5</b>
-        <br>
-        <b>-x^2+4x</b>
-      </div>
-    `;
+  output.innerHTML = `
 
-    return;
-  }
-
-  const a = p.a2;
-  const b = p.a;
-  const c = p.c;
-
-  let html = "";
-
-  /* =========================
-     DOMAINE
-     ========================= */
-
-  html += `
     <div class="card">
-
-      <h3>📌 Domaine</h3>
-
-      <p>
-        La fonction est un polynôme.
-      </p>
-
-      <p>
-        <b>D<sub>f</sub> = ℝ</b>
-      </p>
-
-    </div>
-  `;
-
-  /* =========================
-     FONCTION
-     ========================= */
-
-  html += `
-    <div class="card">
-
       <h3>📝 Fonction</h3>
-
-      <p>
-        f(x) = <b>${formatQuadraticAdvanced(a,b,c)}</b>
-      </p>
-
+      <p><b>f(x) = ${input}</b></p>
     </div>
-  `;
 
-  /* =========================
-     CONSTANTE
-     ========================= */
-
-  if(a === 0 && b === 0){
-
-    html += `
-      <div class="card">
-
-        <h3>📊 Analyse</h3>
-
-        <p>
-          Fonction constante :
-          <b>f(x) = ${formatN(c)}</b>
-        </p>
-
-      </div>
-    `;
-
-    output.innerHTML = html;
-
-    drawFunctionCurve(a,b,c);
-
-    return;
-  }
-
-  /* =========================
-     DÉRIVÉE
-     ========================= */
-
-  const derivative =
-    `${formatN(2*a)}x ${b >= 0 ? "+" : "−"} ${Math.abs(b)}`;
-
-  html += `
     <div class="card">
+      <h3>📌 Domaine de définition</h3>
+      <p>${domain}</p>
+    </div>
 
+    <div class="card">
       <h3>📐 Dérivée</h3>
-
-      <p>
-        f'(x) = <b>${derivative}</b>
-      </p>
-
+      <p>${derivative}</p>
     </div>
-  `;
 
-  /* =========================
-     PREMIER DEGRÉ
-     ========================= */
-
-  if(a === 0){
-
-    const root = -c/b;
-
-    html += `
-      <div class="card">
-
-        <h3>🎯 Racine</h3>
-
-        <p>
-          f(x) = 0
-        </p>
-
-        <p>
-          x = −c/b
-        </p>
-
-        <p class="demo-solution">
-          x = ${formatN(root)}
-        </p>
-
-      </div>
-    `;
-
-    html += `
-      <div class="card">
-
-        <h3>📈 Variations</h3>
-
-        <p>
-          f'(x) = ${formatN(b)}
-        </p>
-
-        <p>
-          ${
-            b > 0
-            ? "La fonction est strictement croissante sur ℝ."
-            : "La fonction est strictement décroissante sur ℝ."
-          }
-        </p>
-
-      </div>
-    `;
-
-    output.innerHTML = html;
-
-    drawFunctionCurve(a,b,c);
-
-    return;
-  }
-
-  /* =========================
-     SECOND DEGRÉ
-     ========================= */
-
-  const delta = b*b - 4*a*c;
-
-  html += `
     <div class="card">
-
-      <h3>Δ Discriminant</h3>
-
-      <p>
-        Δ = b² − 4ac
-      </p>
-
-      <p>
-        Δ =
-        (${formatN(b)})²
-        − 4 × ${formatN(a)}
-        × ${formatN(c)}
-      </p>
-
-      <p>
-        <b>Δ = ${formatN(delta)}</b>
-      </p>
-
+      <h3>🎯 Racines</h3>
+      <p>${roots}</p>
     </div>
-  `;
 
-  /* =========================
-     RACINES
-     ========================= */
-
-  if(delta > 0){
-
-    const sqrtDelta = Math.sqrt(delta);
-
-    const x1 =
-      (-b - sqrtDelta)/(2*a);
-
-    const x2 =
-      (-b + sqrtDelta)/(2*a);
-
-    const roots =
-      x1 < x2
-      ? [x1,x2]
-      : [x2,x1];
-
-    html += `
-      <div class="card">
-
-        <h3>🎯 Racines</h3>
-
-        <p>
-          x₁ = ${formatN(roots[0])}
-        </p>
-
-        <p>
-          x₂ = ${formatN(roots[1])}
-        </p>
-
-      </div>
-    `;
-
-  }
-
-  else if(Math.abs(delta) < 1e-12){
-
-    const x0 =
-      -b/(2*a);
-
-    html += `
-      <div class="card">
-
-        <h3>🎯 Racine double</h3>
-
-        <p>
-          x₀ = ${formatN(x0)}
-        </p>
-
-      </div>
-    `;
-
-  }
-
-  else{
-
-    html += `
-      <div class="card">
-
-        <h3>🎯 Racines</h3>
-
-        <p>
-          Δ &lt; 0
-        </p>
-
-        <p>
-          La fonction ne possède aucune racine réelle.
-        </p>
-
-      </div>
-    `;
-  }
-
-  /* =========================
-     SOMMET
-     ========================= */
-
-  const xv =
-    -b/(2*a);
-
-  const yv =
-    a*xv*xv + b*xv + c;
-
-  html += `
     <div class="card">
-
-      <h3>⭐ Sommet / Extremum</h3>
-
-      <p>
-        x<sub>S</sub> = −b/(2a)
-      </p>
-
-      <p>
-        x<sub>S</sub> =
-        <b>${formatN(xv)}</b>
-      </p>
-
-      <p>
-        y<sub>S</sub> =
-        <b>${formatN(yv)}</b>
-      </p>
-
-      <p>
-        <span class="demo-solution">
-          S(${formatN(xv)} ; ${formatN(yv)})
-        </span>
-      </p>
-
-      <p>
-        ${
-          a > 0
-          ? "Minimum"
-          : "Maximum"
-        }
-      </p>
-
+      <h3>↔️ Limites</h3>
+      ${limits}
     </div>
-  `;
 
-  /* =========================
-     VARIATIONS
-     ========================= */
-
-  html += `
     <div class="card">
+      <h3>⭐ Extrema</h3>
+      ${extrema}
+    </div>
 
+    <div class="card">
       <h3>📈 Variations</h3>
-
-      ${
-        a > 0
-        ? `
-          <p>
-            f'(x) &lt; 0 pour x &lt; ${formatN(xv)}
-          </p>
-
-          <p>
-            f'(x) = 0 pour x = ${formatN(xv)}
-          </p>
-
-          <p>
-            f'(x) &gt; 0 pour x &gt; ${formatN(xv)}
-          </p>
-
-          <p>
-            📉 Décroissante sur
-            ]−∞ ; ${formatN(xv)}[
-          </p>
-
-          <p>
-            📈 Croissante sur
-            ]${formatN(xv)} ; +∞[
-          </p>
-        `
-        : `
-          <p>
-            f'(x) &gt; 0 pour x &lt; ${formatN(xv)}
-          </p>
-
-          <p>
-            f'(x) = 0 pour x = ${formatN(xv)}
-          </p>
-
-          <p>
-            f'(x) &lt; 0 pour x &gt; ${formatN(xv)}
-          </p>
-
-          <p>
-            📈 Croissante sur
-            ]−∞ ; ${formatN(xv)}[
-          </p>
-
-          <p>
-            📉 Décroissante sur
-            ]${formatN(xv)} ; +∞[
-          </p>
-        `
-      }
-
+      ${variationText(f)}
     </div>
-  `;
 
-  /* =========================
-     ORDONNÉE À L'ORIGINE
-     ========================= */
-
-  html += `
     <div class="card">
-
-      <h3>📍 Point sur l'axe Y</h3>
-
-      <p>
-        f(0) = ${formatN(c)}
-      </p>
-
-      <p>
-        <b>O<sub>y</sub>(0 ; ${formatN(c)})</b>
-      </p>
-
+      <h3>📊 Tableau de variation</h3>
+      ${variationTable(f)}
     </div>
   `;
 
-  output.innerHTML = html;
-
-  /* =========================
-     COURBE
-     ========================= */
-
-  drawFunctionCurve(a,b,c);
+  drawAdvancedFunction(f);
 }
 
 
 /* =========================================================
-   DESSIN DE LA COURBE
+   NORMALISATION
    ========================================================= */
 
-function drawFunctionCurve(a,b,c){
+function normalizeFunction(f){
+
+  return f
+    .replace(/\s+/g,"")
+    .replace(/²/g,"^2")
+    .replace(/³/g,"^3")
+    .replace(/π/g,"pi")
+    .replace(/÷/g,"/")
+    .replace(/×/g,"*")
+    .replace(/√/g,"sqrt")
+    .replace(/ln/g,"ln")
+    .replace(/sen/g,"sin")
+    .replace(/tg/g,"tan");
+}
+
+
+/* =========================================================
+   ÉVALUATION SÉCURISÉE
+   ========================================================= */
+
+function evalFunction(f,x){
+
+  let expr = f
+    .replace(/\^/g,"**")
+    .replace(/pi/g,"Math.PI")
+    .replace(/sqrt/g,"Math.sqrt")
+    .replace(/ln/g,"Math.log")
+    .replace(/exp/g,"Math.exp")
+    .replace(/sin/g,"Math.sin")
+    .replace(/cos/g,"Math.cos")
+    .replace(/tan/g,"Math.tan")
+    .replace(/\be\b/g,"Math.E");
+
+  return Function(
+    "x",
+    `"use strict"; return (${expr})`
+  )(x);
+}
+
+
+/* =========================================================
+   DOMAINE
+   ========================================================= */
+
+function getDomain(f){
+
+  let restrictions = [];
+
+  /* ln */
+
+  if(/ln\(/.test(f)){
+
+    restrictions.push(
+      "Pour ln(u), il faut u > 0."
+    );
+  }
+
+  /* sqrt */
+
+  if(/sqrt\(/.test(f)){
+
+    restrictions.push(
+      "Pour √u, il faut u ≥ 0."
+    );
+  }
+
+  /* fractions */
+
+  if(f.includes("/")){
+
+    restrictions.push(
+      "Les dénominateurs doivent être différents de 0."
+    );
+  }
+
+  if(restrictions.length === 0){
+
+    return "<b>D<sub>f</sub> = ℝ</b>";
+  }
+
+  return `
+    <p>${restrictions.join("<br>")}</p>
+    <p>
+      ℹ️ Les conditions sont automatiquement prises en compte
+      lors du tracé.
+    </p>
+  `;
+}
+
+
+/* =========================================================
+   DÉRIVÉE SYMBOLIQUE
+   ========================================================= */
+
+function derivativeFunction(f){
+
+  /* Polynôme */
+
+  const p = parsePolynomialAdvanced(f);
+
+  if(p){
+
+    let result = "";
+
+    if(p.a2 !== 0)
+      result += formatN(2*p.a2) + "x";
+
+    if(p.a !== 0){
+
+      if(result)
+        result += p.a > 0 ? " + " : " − ";
+
+      result += formatN(Math.abs(p.a));
+    }
+
+    if(!result)
+      result = "0";
+
+    return `<b>f'(x) = ${result}</b>`;
+  }
+
+  /* fonctions classiques */
+
+  if(f === "sin(x)")
+    return "<b>f'(x) = cos(x)</b>";
+
+  if(f === "cos(x)")
+    return "<b>f'(x) = −sin(x)</b>";
+
+  if(f === "tan(x)")
+    return "<b>f'(x) = 1/cos²(x)</b>";
+
+  if(f === "ln(x)")
+    return "<b>f'(x) = 1/x</b>";
+
+  if(f === "exp(x)" || f === "e^x")
+    return "<b>f'(x) = e^x</b>";
+
+  if(f === "sqrt(x)")
+    return "<b>f'(x) = 1/(2√x)</b>";
+
+  return `
+    <b>f'(x)</b> sera calculée numériquement
+    pour l'analyse de la courbe.
+  `;
+}
+
+
+/* =========================================================
+   RACINES NUMÉRIQUES
+   ========================================================= */
+
+function findRoots(f){
+
+  let roots = [];
+
+  const min = -20;
+  const max = 20;
+  const step = 0.05;
+
+  let previousX = min;
+
+  let previousY;
+
+  try{
+    previousY = evalFunction(f,previousX);
+  }catch{
+    previousY = NaN;
+  }
+
+  for(
+    let x=min+step;
+    x<=max;
+    x+=step
+  ){
+
+    let y;
+
+    try{
+      y = evalFunction(f,x);
+    }catch{
+      previousX=x;
+      previousY=NaN;
+      continue;
+    }
+
+    if(
+      Number.isFinite(previousY) &&
+      Number.isFinite(y)
+    ){
+
+      if(
+        Math.abs(y) < 0.01 ||
+        previousY*y < 0
+      ){
+
+        let root = refineRoot(
+          f,
+          previousX,
+          x
+        );
+
+        if(
+          Number.isFinite(root) &&
+          !roots.some(r=>Math.abs(r-root)<0.05)
+        ){
+
+          roots.push(root);
+        }
+      }
+    }
+
+    previousX=x;
+    previousY=y;
+  }
+
+  if(!roots.length)
+    return "Aucune racine réelle détectée sur l'intervalle étudié.";
+
+  return roots
+    .map(
+      (r,i)=>
+      `<b>x${i+1} ≈ ${formatN(r)}</b>`
+    )
+    .join("<br>");
+}
+
+
+function refineRoot(f,a,b){
+
+  for(let i=0;i<50;i++){
+
+    const m=(a+b)/2;
+
+    let fa, fm;
+
+    try{
+      fa=evalFunction(f,a);
+      fm=evalFunction(f,m);
+    }catch{
+      return NaN;
+    }
+
+    if(Math.abs(fm)<1e-8)
+      return m;
+
+    if(fa*fm<=0)
+      b=m;
+    else
+      a=m;
+  }
+
+  return (a+b)/2;
+}
+
+
+/* =========================================================
+   LIMITES
+   ========================================================= */
+
+function getLimits(f){
+
+  let html="";
+
+  const points=[
+    {x:-20,label:"x → −∞"},
+    {x:20,label:"x → +∞"}
+  ];
+
+  for(const p of points){
+
+    try{
+
+      const y=evalFunction(f,p.x);
+
+      html += `
+        <p>
+          <b>${p.label}</b>
+          ≈ ${formatN(y)}
+        </p>
+      `;
+
+    }catch{
+
+      html += `
+        <p>
+          <b>${p.label}</b> :
+          non déterminée automatiquement
+        </p>
+      `;
+    }
+  }
+
+  return html;
+}
+
+
+/* =========================================================
+   EXTREMA NUMÉRIQUES
+   ========================================================= */
+
+function findExtrema(f){
+
+  let extrema=[];
+
+  let lastY=NaN;
+
+  let lastSlope=NaN;
+
+  for(
+    let x=-10;
+    x<=10;
+    x+=0.05
+  ){
+
+    let y1,y2;
+
+    try{
+
+      y1=evalFunction(f,x);
+      y2=evalFunction(f,x+0.05);
+
+    }catch{
+      continue;
+    }
+
+    if(
+      !Number.isFinite(y1) ||
+      !Number.isFinite(y2)
+    )
+      continue;
+
+    const slope=y2-y1;
+
+    if(
+      Number.isFinite(lastSlope) &&
+      slope*lastSlope<0
+    ){
+
+      const xm=x;
+
+      const ym=evalFunction(f,xm);
+
+      extrema.push({
+        x:xm,
+        y:ym,
+        type:slope>0
+          ?"minimum"
+          :"maximum"
+      });
+    }
+
+    lastSlope=slope;
+    lastY=y1;
+  }
+
+  if(!extrema.length)
+    return "<p>Aucun extremum détecté.</p>";
+
+  return extrema
+    .slice(0,8)
+    .map(e=>`
+      <p>
+        ⭐ <b>${e.type}</b> :
+        (${formatN(e.x)} ; ${formatN(e.y)})
+      </p>
+    `)
+    .join("");
+}
+
+
+/* =========================================================
+   VARIATIONS
+   ========================================================= */
+
+function variationText(f){
+
+  let increasing=0;
+  let decreasing=0;
+
+  for(
+    let x=-10;
+    x<=10;
+    x+=0.1
+  ){
+
+    try{
+
+      const y1=evalFunction(f,x);
+      const y2=evalFunction(f,x+0.1);
+
+      if(y2>y1)
+        increasing++;
+
+      if(y2<y1)
+        decreasing++;
+
+    }catch{}
+  }
+
+  if(increasing>decreasing){
+
+    return `
+      <p>
+        📈 La fonction présente des zones
+        de croissance sur l'intervalle étudié.
+      </p>
+    `;
+  }
+
+  if(decreasing>increasing){
+
+    return `
+      <p>
+        📉 La fonction présente des zones
+        de décroissance sur l'intervalle étudié.
+      </p>
+    `;
+  }
+
+  return `
+    <p>
+      📊 La fonction possède plusieurs comportements
+      sur l'intervalle étudié.
+    </p>
+  `;
+}
+
+
+/* =========================================================
+   TABLEAU DE VARIATION
+   ========================================================= */
+
+function variationTable(f){
+
+  let cells="";
+
+  for(
+    let x=-5;
+    x<=5;
+    x++
+  ){
+
+    let y;
+
+    try{
+      y=evalFunction(f,x);
+    }catch{
+      y="—";
+    }
+
+    cells+=`
+      <td style="
+        padding:8px;
+        border:1px solid #30212b;
+        text-align:center;
+      ">
+        ${formatN(y)}
+      </td>
+    `;
+  }
+
+  return `
+    <div style="overflow:auto">
+
+      <table style="
+        width:100%;
+        border-collapse:collapse;
+        color:white;
+      ">
+
+        <tr>
+          ${[-5,-4,-3,-2,-1,0,1,2,3,4,5]
+            .map(x=>`
+              <th style="
+                padding:8px;
+                border:1px solid #30212b;
+              ">
+                ${x}
+              </th>
+            `).join("")
+          }
+        </tr>
+
+        <tr>
+          ${cells}
+        </tr>
+
+      </table>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   COURBE AVANCÉE
+   ========================================================= */
+
+function drawAdvancedFunction(f){
 
   const canvas =
     document.getElementById("functionCanvas");
@@ -1788,29 +1934,27 @@ function drawFunctionCurve(a,b,c){
   const ctx =
     canvas.getContext("2d");
 
-  const W = canvas.width;
-  const H = canvas.height;
+  const W=canvas.width;
+  const H=canvas.height;
 
   ctx.clearRect(0,0,W,H);
 
-  /* =========================
-     REPÈRE
-     ========================= */
+  const scaleX=45;
+  const scaleY=45;
 
-  const scaleX = 45;
-  const scaleY = 45;
-
-  const originX = W/2;
-  const originY = H/2;
+  const originX=W/2;
+  const originY=H/2;
 
   /* grille */
 
-  ctx.strokeStyle = "#211923";
-  ctx.lineWidth = 1;
+  ctx.strokeStyle="#211923";
+  ctx.lineWidth=1;
 
-  for(let x=originX % scaleX;
-      x<W;
-      x+=scaleX){
+  for(
+    let x=originX%scaleX;
+    x<W;
+    x+=scaleX
+  ){
 
     ctx.beginPath();
     ctx.moveTo(x,0);
@@ -1818,9 +1962,11 @@ function drawFunctionCurve(a,b,c){
     ctx.stroke();
   }
 
-  for(let y=originY % scaleY;
-      y<H;
-      y+=scaleY){
+  for(
+    let y=originY%scaleY;
+    y<H;
+    y+=scaleY
+  ){
 
     ctx.beginPath();
     ctx.moveTo(0,y);
@@ -1828,67 +1974,35 @@ function drawFunctionCurve(a,b,c){
     ctx.stroke();
   }
 
-  /* =========================
-     AXES
-     ========================= */
+  /* axes */
 
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 2;
-
-  /* axe X */
+  ctx.strokeStyle="#ffffff";
+  ctx.lineWidth=2;
 
   ctx.beginPath();
-
   ctx.moveTo(0,originY);
   ctx.lineTo(W,originY);
-
   ctx.stroke();
 
-  /* axe Y */
-
   ctx.beginPath();
-
   ctx.moveTo(originX,0);
   ctx.lineTo(originX,H);
-
   ctx.stroke();
 
-  /* =========================
-     FLÈCHES
-     ========================= */
+  /* graduations */
 
-  ctx.beginPath();
+  ctx.fillStyle="#aaa";
+  ctx.font="11px Arial";
 
-  ctx.moveTo(W-10,originY-5);
-  ctx.lineTo(W,originY);
-  ctx.lineTo(W-10,originY+5);
+  for(
+    let i=-10;
+    i<=10;
+    i++
+  ){
 
-  ctx.stroke();
+    if(i===0) continue;
 
-  ctx.beginPath();
-
-  ctx.moveTo(originX-5,10);
-  ctx.lineTo(originX,0);
-  ctx.lineTo(originX+5,10);
-
-  ctx.stroke();
-
-  /* =========================
-     GRADUATIONS
-     ========================= */
-
-  ctx.fillStyle = "#aaa";
-  ctx.font = "11px Arial";
-
-  ctx.strokeStyle = "#aaa";
-  ctx.lineWidth = 1;
-
-  for(let i=-10;i<=10;i++){
-
-    if(i === 0) continue;
-
-    const px =
-      originX + i*scaleX;
+    const px=originX+i*scaleX;
 
     if(px>=0 && px<=W){
 
@@ -1907,12 +2021,15 @@ function drawFunctionCurve(a,b,c){
     }
   }
 
-  for(let i=-5;i<=5;i++){
+  for(
+    let i=-5;
+    i<=5;
+    i++
+  ){
 
-    if(i === 0) continue;
+    if(i===0) continue;
 
-    const py =
-      originY - i*scaleY;
+    const py=originY-i*scaleY;
 
     if(py>=0 && py<=H){
 
@@ -1931,64 +2048,226 @@ function drawFunctionCurve(a,b,c){
     }
   }
 
-  /* =========================
-     COURBE
-     ========================= */
+  /* courbe */
+
+  ctx.strokeStyle="#ff4fa3";
+  ctx.lineWidth=3;
 
   ctx.beginPath();
 
-  let started = false;
+  let started=false;
+  let previousPy=null;
 
-  for(let px=0;px<=W;px++){
+  for(
+    let px=0;
+    px<=W;
+    px++
+  ){
 
-    const x =
+    const x=
       (px-originX)/scaleX;
 
-    const y =
-      a*x*x + b*x + c;
+    let y;
 
-    const py =
-      originY - y*scaleY;
+    try{
+      y=evalFunction(f,x);
+    }catch{
+      started=false;
+      previousPy=null;
+      continue;
+    }
+
+    const py=
+      originY-y*scaleY;
 
     if(
-      Number.isFinite(py) &&
-      py>-10000 &&
-      py<10000
+      !Number.isFinite(py) ||
+      Math.abs(py)>10000
     ){
 
-      if(!started){
+      started=false;
+      previousPy=null;
+      continue;
+    }
 
-        ctx.moveTo(px,py);
-        started = true;
+    /* évite les traits lors d'une asymptote */
 
-      }else{
+    if(
+      previousPy!==null &&
+      Math.abs(py-previousPy)>150
+    ){
 
-        ctx.lineTo(px,py);
+      started=false;
+    }
+
+    if(!started){
+
+      ctx.moveTo(px,py);
+      started=true;
+
+    }else{
+
+      ctx.lineTo(px,py);
+    }
+
+    previousPy=py;
+  }
+
+  ctx.stroke();
+
+  /* points remarquables */
+
+  drawSpecialPoints(
+    ctx,
+    f,
+    originX,
+    originY,
+    scaleX,
+    scaleY,
+    W,
+    H
+  );
+}
+
+
+/* =========================================================
+   POINTS REMARQUABLES
+   ========================================================= */
+
+function drawSpecialPoints(
+  ctx,
+  f,
+  originX,
+  originY,
+  scaleX,
+  scaleY,
+  W,
+  H
+){
+
+  /* origine / intersection Y */
+
+  try{
+
+    const y=evalFunction(f,0);
+
+    const py=
+      originY-y*scaleY;
+
+    if(py>=0 && py<=H){
+
+      ctx.beginPath();
+
+      ctx.arc(
+        originX,
+        py,
+        5,
+        0,
+        Math.PI*2
+      );
+
+      ctx.fillStyle="#ffffff";
+      ctx.fill();
+
+      ctx.fillStyle="#ffffff";
+
+      ctx.font="bold 11px Arial";
+
+      ctx.fillText(
+        `(0 ; ${formatN(y)})`,
+        originX+8,
+        py-8
+      );
+    }
+
+  }catch{}
+
+  /* racines */
+
+  const roots=[];
+
+  for(
+    let x=-10;
+    x<=10;
+    x+=0.05
+  ){
+
+    let y;
+
+    try{
+      y=evalFunction(f,x);
+    }catch{
+      continue;
+    }
+
+    if(
+      Number.isFinite(y) &&
+      Math.abs(y)<0.02
+    ){
+
+      if(
+        !roots.some(
+          r=>Math.abs(r-x)<0.1
+        )
+      ){
+
+        roots.push(x);
       }
     }
   }
 
-  ctx.strokeStyle = "#ff4fa3";
-  ctx.lineWidth = 3;
+  roots.slice(0,10).forEach(x=>{
 
-  ctx.stroke();
+    const px=
+      originX+x*scaleX;
 
-  /* =========================
-     SOMMET
-     ========================= */
+    const py=
+      originY;
 
-  if(a !== 0){
+    if(
+      px>=0 &&
+      px<=W
+    ){
 
-    const xv =
-      -b/(2*a);
+      ctx.beginPath();
 
-    const yv =
-      a*xv*xv+b*xv+c;
+      ctx.arc(
+        px,
+        py,
+        5,
+        0,
+        Math.PI*2
+      );
 
-    const px =
+      ctx.fillStyle="#ffffff";
+      ctx.fill();
+
+      ctx.font="bold 10px Arial";
+
+      ctx.fillText(
+        `x=${formatN(x)}`,
+        px+5,
+        py-8
+      );
+    }
+  });
+
+  /* sommet spécial pour polynôme */
+
+  const p=parsePolynomialAdvanced(f);
+
+  if(p && p.a2!==0){
+
+    const xv=
+      -p.a/(2*p.a2);
+
+    const yv=
+      evalFunction(f,xv);
+
+    const px=
       originX+xv*scaleX;
 
-    const py =
+    const py=
       originY-yv*scaleY;
 
     if(
@@ -2003,55 +2282,22 @@ function drawFunctionCurve(a,b,c){
       ctx.arc(
         px,
         py,
-        6,
+        7,
         0,
         Math.PI*2
       );
 
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle="#ffffff";
       ctx.fill();
 
-      ctx.font = "bold 12px Arial";
-      ctx.fillStyle = "#ffffff";
+      ctx.font="bold 12px Arial";
 
       ctx.fillText(
         `S(${formatN(xv)} ; ${formatN(yv)})`,
         px+9,
-        py-9
+        py-10
       );
     }
-  }
-
-  /* =========================
-     POINT ORIGINE
-     ========================= */
-
-  const py0 =
-    originY-c*scaleY;
-
-  if(
-    py0>=0 &&
-    py0<=H
-  ){
-
-    ctx.beginPath();
-
-    ctx.arc(
-      originX,
-      py0,
-      5,
-      0,
-      Math.PI*2
-    );
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fill();
-
-    ctx.fillText(
-      `(0 ; ${formatN(c)})`,
-      originX+8,
-      py0-8
-    );
   }
 }
 </script></body></html>
