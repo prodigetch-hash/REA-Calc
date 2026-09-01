@@ -576,7 +576,8 @@ updateUnits();
   const input = document
     .getElementById("demoEquation")
     .value
-    .trim();
+    .trim()
+    .replace(/\s+/g,"");
 
   const result = document.getElementById("demoResult");
 
@@ -589,29 +590,128 @@ updateUnits();
 
   if(parts.length !== 2){
     result.textContent =
-      "Écris une équation sous la forme : gauche = droite";
+      "Écris une équation sous la forme : 2x + 6 = 14";
     return;
   }
 
-  let left = parts[0].trim();
-  let right = parts[1].trim();
+  const left = parts[0];
+  const right = parts[1];
+
+  const pattern = /^([+-]?\d*\.?\d*)x([+-]\d+\.?\d*)?$/;
+
+  const L = left.match(pattern);
+  const R = right.match(pattern);
+
+  let a,b,c,d;
+
+  if(L){
+    a = parseCoefficient(L[1]);
+    b = L[2] ? Number(L[2]) : 0;
+  }else{
+    a = 0;
+    b = Number(left);
+  }
+
+  if(R){
+    c = parseCoefficient(R[1]);
+    d = R[2] ? Number(R[2]) : 0;
+  }else{
+    c = 0;
+    d = Number(right);
+  }
+
+  if(!Number.isFinite(a) ||
+     !Number.isFinite(b) ||
+     !Number.isFinite(c) ||
+     !Number.isFinite(d)){
+
+    result.textContent =
+      "Cette équation n'est pas encore prise en charge.";
+    return;
+  }
+
+  const A = a-c;
+  const B = d-b;
+
+  if(A === 0){
+
+    result.innerHTML =
+      B === 0
+      ? "<div class='card'>♾️ Une infinité de solutions.</div>"
+      : "<div class='card'>❌ Aucune solution.</div>";
+
+    return;
+  }
+
+  const x = B/A;
+
+  let step1 = `${formatEquation(a,b)} = ${formatEquation(c,d)}`;
+  let step2 = `${formatNumber(A)}x = ${formatNumber(B)}`;
+  let step3 = `x = ${formatNumber(B)} ÷ ${formatNumber(A)}`;
+  let solution = `x = ${formatNumber(x)}`;
 
   result.innerHTML = `
     <div class="card">
       <b>Étape 1 — Équation initiale</b><br>
-      ${left} = ${right}
+      ${step1}
     </div>
 
     <div class="card">
-      <b>Étape 2 — Regrouper les termes</b><br>
-      On cherche à isoler <b>x</b>.
+      <b>Étape 2 — Regrouper les termes en x</b><br>
+      ${step2}
     </div>
 
     <div class="card">
-      <b>Étape 3 — Résultat</b><br>
-      Utilise l'onglet <b>🟰 Équations</b>
-      pour obtenir automatiquement la solution.
+      <b>Étape 3 — Isoler x</b><br>
+      ${step3}
+    </div>
+
+    <div class="card">
+      <b>Étape 4 — Solution</b><br>
+      <span style="color:#ff4fa3;font-size:24px">
+        ${solution}
+      </span>
     </div>
   `;
+}
+
+function parseCoefficient(value){
+
+  if(value === "" || value === "+")
+    return 1;
+
+  if(value === "-")
+    return -1;
+
+  return Number(value);
+}
+
+function formatNumber(n){
+
+  return Number.isInteger(n)
+    ? n
+    : Number(n.toFixed(10));
+}
+
+function formatEquation(a,b){
+
+  let text = "";
+
+  if(a !== 0){
+
+    if(a === 1) text += "x";
+    else if(a === -1) text += "-x";
+    else text += formatNumber(a) + "x";
+  }
+
+  if(b > 0){
+    text += (a !== 0 ? " + " : "") + formatNumber(b);
+  }
+
+  if(b < 0){
+    text += (a !== 0 ? " - " : "-") + formatNumber(Math.abs(b));
+  }
+
+  return text || "0";
 }
 </script></body></html>
