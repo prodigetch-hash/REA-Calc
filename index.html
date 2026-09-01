@@ -153,7 +153,77 @@
   <div id="matrixSystemResult"></div>
 
 </section>
-<section id="stats" class="panel"><div class="card"><h2>📊 Statistiques</h2><input class="input" placeholder="12 ; 15 ; 18 ; 20 ; 25"><button class="action">Analyser</button></div></section>
+<section id="stats" class="panel">
+
+  <div class="card">
+
+    <h2>📊 Statistiques</h2>
+
+    <textarea
+      id="statsInput"
+      class="input"
+      rows="4"
+      placeholder="Entre les données séparées par des espaces, virgules ou ;&#10;Ex : 12 15 18 12 20 15 17"></textarea>
+
+    <button
+      class="action"
+      onclick="analyzeStatisticsV2()">
+      📊 Analyser
+    </button>
+
+  </div>
+
+  <div id="statsResult"></div>
+
+  <div class="card">
+    <h3>📈 Histogramme</h3>
+
+    <canvas
+      id="statsHistogram"
+      width="500"
+      height="320"
+      style="
+        width:100%;
+        background:#0c090d;
+        border-radius:16px;
+      ">
+    </canvas>
+  </div>
+
+  <div class="card">
+    <h3>📦 Boîte à moustaches</h3>
+
+    <canvas
+      id="statsBoxplot"
+      width="500"
+      height="180"
+      style="
+        width:100%;
+        background:#0c090d;
+        border-radius:16px;
+      ">
+    </canvas>
+  </div>
+
+  <div class="card">
+    <h3>🥧 Diagramme circulaire</h3>
+
+    <canvas
+      id="statsPie"
+      width="400"
+      height="400"
+      style="
+        width:100%;
+        max-width:400px;
+        display:block;
+        margin:auto;
+        background:#0c090d;
+        border-radius:16px;
+      ">
+    </canvas>
+  </div>
+
+</section>
   <section id="base" class="panel">
   <div class="card">
     <h2>🔢 Conversion en base b</h2>
@@ -3648,5 +3718,809 @@ function solveMatrixSystem(){
     </div>
 
   `;
+}
+  /* =========================================================
+   RÉA-CALC — STATISTIQUES V2
+   ========================================================= */
+
+function analyzeStatisticsV2(){
+
+  const input =
+    document.getElementById("statsInput")
+      .value.trim();
+
+  const result =
+    document.getElementById("statsResult");
+
+  if(!input){
+
+    result.innerHTML=`
+      <div class="card">
+        ⚠️ Entre une série statistique.
+      </div>
+    `;
+
+    return;
+  }
+
+  const data=input
+    .split(/[\s,;]+/)
+    .map(Number)
+    .filter(Number.isFinite);
+
+  if(!data.length){
+
+    result.innerHTML=`
+      <div class="card">
+        ❌ Aucune donnée numérique reconnue.
+      </div>
+    `;
+
+    return;
+  }
+
+  data.sort((a,b)=>a-b);
+
+  const n=data.length;
+
+  const sum=
+    data.reduce((a,b)=>a+b,0);
+
+  const mean=sum/n;
+
+  const median=
+    calculateMedianV2(data);
+
+  const mode=
+    calculateModeV2(data);
+
+  const variance=
+    data.reduce(
+      (s,x)=>s+Math.pow(x-mean,2),
+      0
+    )/n;
+
+  const standardDeviation=
+    Math.sqrt(variance);
+
+  const minimum=data[0];
+
+  const maximum=data[n-1];
+
+  const range=
+    maximum-minimum;
+
+  const q1=
+    calculateQuartileV2(data,0.25);
+
+  const q2=
+    calculateQuartileV2(data,0.50);
+
+  const q3=
+    calculateQuartileV2(data,0.75);
+
+  const iqr=q3-q1;
+
+  const coefficientVariation=
+    mean!==0
+      ? standardDeviation/Math.abs(mean)*100
+      : NaN;
+
+  const frequencies=
+    calculateFrequenciesV2(data);
+
+  let html="";
+
+  /* =========================
+     EFFECTIF
+     ========================= */
+
+  html+=`
+    <div class="card">
+
+      <h3>🔢 Effectif</h3>
+
+      <p>
+        Nombre de valeurs :
+        <b>${n}</b>
+      </p>
+
+      <p>
+        Somme :
+        <b>${formatN(sum)}</b>
+      </p>
+
+    </div>
+  `;
+
+  /* =========================
+     MOYENNE
+     ========================= */
+
+  html+=`
+    <div class="card">
+
+      <h3>📌 Moyenne</h3>
+
+      <p>
+        x̄ =
+        <b>${formatN(mean)}</b>
+      </p>
+
+      <p>
+        Formule :
+        x̄ = Σxᵢ / n
+      </p>
+
+    </div>
+  `;
+
+  /* =========================
+     MÉDIANE
+     ========================= */
+
+  html+=`
+    <div class="card">
+
+      <h3>🎯 Médiane</h3>
+
+      <p>
+        <b>${formatN(median)}</b>
+      </p>
+
+    </div>
+  `;
+
+  /* =========================
+     MODE
+     ========================= */
+
+  html+=`
+    <div class="card">
+
+      <h3>🔁 Mode</h3>
+
+      <p>
+        ${mode}
+      </p>
+
+    </div>
+  `;
+
+  /* =========================
+     DISPERSION
+     ========================= */
+
+  html+=`
+    <div class="card">
+
+      <h3>📐 Dispersion</h3>
+
+      <p>
+        Variance :
+        <b>${formatN(variance)}</b>
+      </p>
+
+      <p>
+        Écart-type :
+        <b>${formatN(standardDeviation)}</b>
+      </p>
+
+      <p>
+        Étendue :
+        <b>${formatN(range)}</b>
+      </p>
+
+      <p>
+        Coefficient de variation :
+        <b>
+          ${
+            Number.isFinite(coefficientVariation)
+              ? formatN(coefficientVariation)+" %"
+              : "Non défini"
+          }
+        </b>
+      </p>
+
+    </div>
+  `;
+
+  /* =========================
+     QUARTILES
+     ========================= */
+
+  html+=`
+    <div class="card">
+
+      <h3>📦 Quartiles</h3>
+
+      <p>
+        Q₁ =
+        <b>${formatN(q1)}</b>
+      </p>
+
+      <p>
+        Q₂ =
+        <b>${formatN(q2)}</b>
+      </p>
+
+      <p>
+        Q₃ =
+        <b>${formatN(q3)}</b>
+      </p>
+
+      <p>
+        Écart interquartile :
+        <b>${formatN(iqr)}</b>
+      </p>
+
+    </div>
+  `;
+
+  /* =========================
+     TABLEAU
+     ========================= */
+
+  html+=`
+
+    <div class="card">
+
+      <h3>📋 Tableau statistique</h3>
+
+      <div style="overflow:auto">
+
+        <table style="
+          width:100%;
+          border-collapse:collapse;
+          color:white;
+        ">
+
+          <tr>
+
+            <th style="padding:8px;border:1px solid #30212b">
+              Valeur
+            </th>
+
+            <th style="padding:8px;border:1px solid #30212b">
+              Effectif
+            </th>
+
+            <th style="padding:8px;border:1px solid #30212b">
+              Fréquence
+            </th>
+
+            <th style="padding:8px;border:1px solid #30212b">
+              %
+            </th>
+
+          </tr>
+
+          ${frequencies.map(item=>`
+
+            <tr>
+
+              <td style="
+                padding:8px;
+                border:1px solid #30212b;
+                text-align:center;
+              ">
+                ${formatN(item.value)}
+              </td>
+
+              <td style="
+                padding:8px;
+                border:1px solid #30212b;
+                text-align:center;
+              ">
+                ${item.count}
+              </td>
+
+              <td style="
+                padding:8px;
+                border:1px solid #30212b;
+                text-align:center;
+              ">
+                ${formatN(item.frequency)}
+              </td>
+
+              <td style="
+                padding:8px;
+                border:1px solid #30212b;
+                text-align:center;
+              ">
+                ${formatN(item.frequency*100)} %
+              </td>
+
+            </tr>
+
+          `).join("")}
+
+        </table>
+
+      </div>
+
+    </div>
+
+  `;
+
+  /* =========================
+     INTERPRÉTATION
+     ========================= */
+
+  html+=`
+
+    <div class="card">
+
+      <h3>🤖 Interprétation</h3>
+
+      <p>
+        La série contient
+        <b>${n}</b> valeurs.
+      </p>
+
+      <p>
+        La valeur moyenne est
+        <b>${formatN(mean)}</b>.
+      </p>
+
+      <p>
+        50 % des données sont inférieures ou égales à
+        <b>${formatN(median)}</b>
+        et 50 % sont supérieures ou égales à cette valeur.
+      </p>
+
+      <p>
+        La dispersion autour de la moyenne est caractérisée
+        par un écart-type de
+        <b>${formatN(standardDeviation)}</b>.
+      </p>
+
+    </div>
+
+  `;
+
+  result.innerHTML=html;
+
+  drawHistogramV2(data);
+
+  drawBoxplotV2(
+    minimum,
+    q1,
+    median,
+    q3,
+    maximum
+  );
+
+  drawPieChartV2(frequencies);
+}
+
+
+/* =========================================================
+   MÉDIANE
+   ========================================================= */
+
+function calculateMedianV2(data){
+
+  const n=data.length;
+
+  if(n%2===1)
+    return data[Math.floor(n/2)];
+
+  return (
+    data[n/2-1]+
+    data[n/2]
+  )/2;
+}
+
+
+/* =========================================================
+   QUARTILE
+   ========================================================= */
+
+function calculateQuartileV2(data,p){
+
+  const position=
+    (data.length-1)*p;
+
+  const lower=
+    Math.floor(position);
+
+  const upper=
+    Math.ceil(position);
+
+  if(lower===upper)
+    return data[lower];
+
+  const weight=
+    position-lower;
+
+  return (
+    data[lower]*(1-weight)+
+    data[upper]*weight
+  );
+}
+
+
+/* =========================================================
+   MODE
+   ========================================================= */
+
+function calculateModeV2(data){
+
+  const counts={};
+
+  data.forEach(x=>{
+
+    const key=String(x);
+
+    counts[key]=
+      (counts[key]||0)+1;
+
+  });
+
+  let max=0;
+
+  Object.values(counts)
+    .forEach(v=>{
+      if(v>max) max=v;
+    });
+
+  if(max===1)
+    return "Aucun mode.";
+
+  const modes=
+    Object.keys(counts)
+      .filter(k=>counts[k]===max)
+      .map(Number);
+
+  return `
+    ${modes
+      .map(x=>`<b>${formatN(x)}</b>`)
+      .join(" ; ")}
+    <br>
+    Effectif maximal :
+    <b>${max}</b>
+  `;
+}
+
+
+/* =========================================================
+   FRÉQUENCES
+   ========================================================= */
+
+function calculateFrequenciesV2(data){
+
+  const map=new Map();
+
+  data.forEach(x=>{
+
+    map.set(
+      x,
+      (map.get(x)||0)+1
+    );
+
+  });
+
+  const n=data.length;
+
+  return [...map.entries()]
+    .sort((a,b)=>a[0]-b[0])
+    .map(([value,count])=>({
+
+      value:value,
+
+      count:count,
+
+      frequency:count/n
+
+    }));
+}
+
+
+/* =========================================================
+   HISTOGRAMME
+   ========================================================= */
+
+function drawHistogramV2(data){
+
+  const canvas=
+    document.getElementById(
+      "statsHistogram"
+    );
+
+  if(!canvas) return;
+
+  const ctx=
+    canvas.getContext("2d");
+
+  const W=canvas.width;
+  const H=canvas.height;
+
+  ctx.clearRect(0,0,W,H);
+
+  const freq=
+    calculateFrequenciesV2(data);
+
+  const maxCount=
+    Math.max(
+      ...freq.map(x=>x.count)
+    );
+
+  const left=50;
+  const bottom=H-40;
+
+  const graphW=W-70;
+  const graphH=H-70;
+
+  /* axes */
+
+  ctx.strokeStyle="#ffffff";
+  ctx.lineWidth=2;
+
+  ctx.beginPath();
+
+  ctx.moveTo(left,10);
+  ctx.lineTo(left,bottom);
+  ctx.lineTo(W-10,bottom);
+
+  ctx.stroke();
+
+  const barWidth=
+    graphW/freq.length;
+
+  freq.forEach((item,i)=>{
+
+    const height=
+      item.count/maxCount*graphH;
+
+    const x=
+      left+i*barWidth+3;
+
+    const y=
+      bottom-height;
+
+    ctx.fillStyle="#ff4fa3";
+
+    ctx.fillRect(
+      x,
+      y,
+      Math.max(1,barWidth-6),
+      height
+    );
+
+    ctx.fillStyle="#ffffff";
+    ctx.font="11px Arial";
+
+    ctx.fillText(
+      formatN(item.value),
+      x+2,
+      bottom+17
+    );
+
+    ctx.fillText(
+      item.count,
+      x+2,
+      y-5
+    );
+
+  });
+}
+
+
+/* =========================================================
+   BOÎTE À MOUSTACHES
+   ========================================================= */
+
+function drawBoxplotV2(
+  min,
+  q1,
+  median,
+  q3,
+  max
+){
+
+  const canvas=
+    document.getElementById(
+      "statsBoxplot"
+    );
+
+  if(!canvas) return;
+
+  const ctx=
+    canvas.getContext("2d");
+
+  const W=canvas.width;
+  const H=canvas.height;
+
+  ctx.clearRect(0,0,W,H);
+
+  const values=[
+    min,q1,median,q3,max
+  ];
+
+  const lo=Math.min(...values);
+  const hi=Math.max(...values);
+
+  const padding=45;
+
+  const scale=
+    (W-2*padding)/
+    (hi-lo || 1);
+
+  const y=H/2;
+
+  function X(v){
+    return padding+(v-lo)*scale;
+  }
+
+  /* axe */
+
+  ctx.strokeStyle="#ffffff";
+  ctx.lineWidth=2;
+
+  ctx.beginPath();
+
+  ctx.moveTo(padding,y+35);
+  ctx.lineTo(W-padding,y+35);
+
+  ctx.stroke();
+
+  /* moustaches */
+
+  ctx.beginPath();
+
+  ctx.moveTo(X(min),y);
+  ctx.lineTo(X(q1),y);
+
+  ctx.moveTo(X(q3),y);
+  ctx.lineTo(X(max),y);
+
+  ctx.stroke();
+
+  /* boîte */
+
+  ctx.strokeRect(
+    X(q1),
+    y-25,
+    X(q3)-X(q1),
+    50
+  );
+
+  /* médiane */
+
+  ctx.beginPath();
+
+  ctx.moveTo(X(median),y-25);
+  ctx.lineTo(X(median),y+25);
+
+  ctx.stroke();
+
+  /* extrémités */
+
+  [min,max].forEach(v=>{
+
+    ctx.beginPath();
+
+    ctx.moveTo(X(v),y-12);
+    ctx.lineTo(X(v),y+12);
+
+    ctx.stroke();
+
+  });
+
+  /* labels */
+
+  ctx.fillStyle="#ffffff";
+  ctx.font="11px Arial";
+
+  [
+    ["Min",min],
+    ["Q₁",q1],
+    ["Med",median],
+    ["Q₃",q3],
+    ["Max",max]
+  ].forEach(([label,v])=>{
+
+    ctx.fillText(
+      `${label}: ${formatN(v)}`,
+      X(v)-18,
+      y-38
+    );
+
+  });
+}
+
+
+/* =========================================================
+   DIAGRAMME CIRCULAIRE
+   ========================================================= */
+
+function drawPieChartV2(freq){
+
+  const canvas=
+    document.getElementById(
+      "statsPie"
+    );
+
+  if(!canvas) return;
+
+  const ctx=
+    canvas.getContext("2d");
+
+  const W=canvas.width;
+  const H=canvas.height;
+
+  ctx.clearRect(0,0,W,H);
+
+  const total=
+    freq.reduce(
+      (s,x)=>s+x.count,
+      0
+    );
+
+  const cx=W/2;
+  const cy=H/2;
+
+  const radius=
+    Math.min(W,H)*0.35;
+
+  let angle=-Math.PI/2;
+
+  freq.forEach((item,i)=>{
+
+    const slice=
+      item.count/total*
+      Math.PI*2;
+
+    ctx.beginPath();
+
+    ctx.moveTo(cx,cy);
+
+    ctx.arc(
+      cx,
+      cy,
+      radius,
+      angle,
+      angle+slice
+    );
+
+    ctx.closePath();
+
+    ctx.fillStyle=
+      `hsl(${(i*47)%360},70%,60%)`;
+
+    ctx.fill();
+
+    ctx.strokeStyle="#0c090d";
+    ctx.stroke();
+
+    const middle=
+      angle+slice/2;
+
+    const tx=
+      cx+
+      Math.cos(middle)*
+      radius*0.65;
+
+    const ty=
+      cy+
+      Math.sin(middle)*
+      radius*0.65;
+
+    ctx.fillStyle="#ffffff";
+    ctx.font="bold 11px Arial";
+    ctx.textAlign="center";
+
+    ctx.fillText(
+      `${formatN(item.value)}`,
+      tx,
+      ty
+    );
+
+    angle+=slice;
+
+  });
+
+  ctx.textAlign="left";
 }
 </script></body></html>
