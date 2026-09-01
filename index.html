@@ -68,7 +68,91 @@
   <div id="equationResult"></div>
 
 </section>
-<section id="matrices" class="panel"><div class="card"><h2>🔲 Matrices</h2><p>Addition · multiplication · déterminant · inverse · transposée</p></div></section>
+<section id="matrices" class="panel">
+
+  <div class="card">
+    <h2>🧮 Calcul matriciel</h2>
+
+    <textarea
+      id="matrixA"
+      class="input"
+      rows="4"
+      placeholder="Matrice A&#10;Ex : 1 2&#10;3 4"></textarea>
+
+    <textarea
+      id="matrixB"
+      class="input"
+      rows="4"
+      placeholder="Matrice B&#10;Ex : 5 6&#10;7 8"></textarea>
+
+    <select id="matrixOperation" class="input">
+      <option value="add">A + B</option>
+      <option value="sub">A − B</option>
+      <option value="mul">A × B</option>
+      <option value="transposeA">Transposée de A</option>
+      <option value="transposeB">Transposée de B</option>
+      <option value="detA">Déterminant de A</option>
+      <option value="detB">Déterminant de B</option>
+      <option value="inverseA">Inverse de A</option>
+      <option value="inverseB">Inverse de B</option>
+      <option value="traceA">Trace de A</option>
+      <option value="rankA">Rang de A</option>
+    </select>
+
+    <button
+      class="action"
+      onclick="calculateMatrixV2()">
+      🧮 Calculer
+    </button>
+  </div>
+
+  <div id="matrixResult"></div>
+
+  <div class="card">
+    <h3>📐 Système 2×2</h3>
+
+    <p>Résoudre :</p>
+
+    <input
+      id="sysA"
+      class="input"
+      placeholder="a₁ (ex : 2)">
+
+    <input
+      id="sysB"
+      class="input"
+      placeholder="b₁ (ex : 3)">
+
+    <input
+      id="sysC"
+      class="input"
+      placeholder="c₁ (ex : 7)">
+
+    <input
+      id="sysD"
+      class="input"
+      placeholder="a₂ (ex : 1)">
+
+    <input
+      id="sysE"
+      class="input"
+      placeholder="b₂ (ex : -1)">
+
+    <input
+      id="sysF"
+      class="input"
+      placeholder="c₂ (ex : 1)">
+
+    <button
+      class="action"
+      onclick="solveMatrixSystem()">
+      🎯 Résoudre le système
+    </button>
+  </div>
+
+  <div id="matrixSystemResult"></div>
+
+</section>
 <section id="stats" class="panel"><div class="card"><h2>📊 Statistiques</h2><input class="input" placeholder="12 ; 15 ; 18 ; 20 ; 25"><button class="action">Analyser</button></div></section>
   <section id="base" class="panel">
   <div class="card">
@@ -2911,6 +2995,657 @@ function solveSpecialEquation(input,result){
       "Conseil",
       "Essaie une équation du type 2x+6=14 ou x^2−4x+3=0."
     )}
+
+  `;
+}
+  /* =========================================================
+   RÉA-CALC — MATRICES V2
+   ========================================================= */
+
+function parseMatrix(text){
+
+  return text
+    .trim()
+    .split(/\n|;/)
+    .map(row =>
+      row
+        .trim()
+        .split(/[\s,]+/)
+        .map(Number)
+    );
+}
+
+
+function validMatrix(M){
+
+  if(!M || !M.length)
+    return false;
+
+  const cols=M[0].length;
+
+  if(!cols)
+    return false;
+
+  return M.every(row =>
+    row.length===cols &&
+    row.every(Number.isFinite)
+  );
+}
+
+
+function matrixHTML(M){
+
+  if(typeof M === "number")
+    return `<b>${formatN(M)}</b>`;
+
+  return `
+    <div style="
+      display:inline-block;
+      border-left:3px solid white;
+      border-right:3px solid white;
+      padding:8px 14px;
+      margin:8px 0;
+    ">
+      ${M.map(row => `
+        <div style="
+          display:flex;
+          gap:20px;
+          justify-content:center;
+          margin:5px 0;
+        ">
+          ${row.map(v =>
+            `<span>${formatN(v)}</span>`
+          ).join("")}
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+
+/* =========================
+   ADDITION
+   ========================= */
+
+function matrixAdd(A,B){
+
+  return A.map((row,i)=>
+    row.map((v,j)=>
+      v+B[i][j]
+    )
+  );
+}
+
+
+/* =========================
+   SOUSTRACTION
+   ========================= */
+
+function matrixSub(A,B){
+
+  return A.map((row,i)=>
+    row.map((v,j)=>
+      v-B[i][j]
+    )
+  );
+}
+
+
+/* =========================
+   MULTIPLICATION
+   ========================= */
+
+function matrixMul(A,B){
+
+  const result=[];
+
+  for(let i=0;i<A.length;i++){
+
+    result[i]=[];
+
+    for(let j=0;j<B[0].length;j++){
+
+      let sum=0;
+
+      for(let k=0;k<B.length;k++){
+
+        sum+=A[i][k]*B[k][j];
+
+      }
+
+      result[i][j]=sum;
+    }
+  }
+
+  return result;
+}
+
+
+/* =========================
+   TRANSPOSÉE
+   ========================= */
+
+function matrixTranspose(A){
+
+  return A[0].map(
+    (_,j)=>
+      A.map(row=>row[j])
+  );
+}
+
+
+/* =========================
+   DÉTERMINANT
+   ========================= */
+
+function matrixDet(A){
+
+  const n=A.length;
+
+  if(
+    !A.every(row=>row.length===n)
+  )
+    return null;
+
+  if(n===1)
+    return A[0][0];
+
+  if(n===2){
+
+    return (
+      A[0][0]*A[1][1]
+      -
+      A[0][1]*A[1][0]
+    );
+  }
+
+  let det=0;
+
+  for(let j=0;j<n;j++){
+
+    const minor=A
+      .slice(1)
+      .map(row =>
+        row.filter(
+          (_,col)=>col!==j
+        )
+      );
+
+    det +=
+      Math.pow(-1,j) *
+      A[0][j] *
+      matrixDet(minor);
+  }
+
+  return det;
+}
+
+
+/* =========================
+   MATRICE DES COFACTEURS
+   ========================= */
+
+function cofactorMatrix(A){
+
+  const n=A.length;
+
+  return A.map((row,i)=>
+    row.map((_,j)=>{
+
+      const minor=A
+        .filter((_,r)=>r!==i)
+        .map(row =>
+          row.filter((_,c)=>c!==j)
+        );
+
+      return (
+        Math.pow(-1,i+j) *
+        matrixDet(minor)
+      );
+
+    })
+  );
+}
+
+
+/* =========================
+   INVERSE
+   ========================= */
+
+function matrixInverse(A){
+
+  const det=matrixDet(A);
+
+  if(det===null || Math.abs(det)<1e-12)
+    return null;
+
+  const cof=cofactorMatrix(A);
+
+  const adj=matrixTranspose(cof);
+
+  return adj.map(row =>
+    row.map(v=>v/det)
+  );
+}
+
+
+/* =========================
+   TRACE
+   ========================= */
+
+function matrixTrace(A){
+
+  if(
+    A.length!==A[0].length
+  )
+    return null;
+
+  let t=0;
+
+  for(let i=0;i<A.length;i++)
+    t+=A[i][i];
+
+  return t;
+}
+
+
+/* =========================
+   RANG
+   ========================= */
+
+function matrixRank(A){
+
+  const M=A.map(row=>row.slice());
+
+  const rows=M.length;
+  const cols=M[0].length;
+
+  let rank=0;
+
+  for(let col=0;col<cols && rank<rows;col++){
+
+    let pivot=rank;
+
+    for(
+      let i=rank+1;
+      i<rows;
+      i++
+    ){
+
+      if(
+        Math.abs(M[i][col])
+        >
+        Math.abs(M[pivot][col])
+      ){
+
+        pivot=i;
+      }
+    }
+
+    if(
+      Math.abs(M[pivot][col])<1e-10
+    )
+      continue;
+
+    [
+      M[rank],
+      M[pivot]
+    ]=[
+      M[pivot],
+      M[rank]
+    ];
+
+    for(
+      let i=rank+1;
+      i<rows;
+      i++
+    ){
+
+      const factor=
+        M[i][col]/M[rank][col];
+
+      for(
+        let j=col;
+        j<cols;
+        j++
+      ){
+
+        M[i][j]-=
+          factor*M[rank][j];
+      }
+    }
+
+    rank++;
+  }
+
+  return rank;
+}
+
+
+/* =========================
+   CALCULATEUR PRINCIPAL
+   ========================= */
+
+function calculateMatrixV2(){
+
+  const A=
+    parseMatrix(
+      document.getElementById("matrixA").value
+    );
+
+  const B=
+    parseMatrix(
+      document.getElementById("matrixB").value
+    );
+
+  const op=
+    document.getElementById("matrixOperation").value;
+
+  const result=
+    document.getElementById("matrixResult");
+
+  if(!validMatrix(A)){
+
+    result.innerHTML=`
+      <div class="card">
+        ❌ Matrice A invalide.
+      </div>
+    `;
+
+    return;
+  }
+
+  let value;
+  let title="";
+
+  try{
+
+    switch(op){
+
+      case "add":
+
+        if(
+          A.length!==B.length ||
+          A[0].length!==B[0].length
+        )
+          throw "Dimensions incompatibles.";
+
+        value=matrixAdd(A,B);
+        title="A + B";
+
+        break;
+
+
+      case "sub":
+
+        if(
+          A.length!==B.length ||
+          A[0].length!==B[0].length
+        )
+          throw "Dimensions incompatibles.";
+
+        value=matrixSub(A,B);
+        title="A − B";
+
+        break;
+
+
+      case "mul":
+
+        if(
+          !validMatrix(B) ||
+          A[0].length!==B.length
+        )
+          throw "Dimensions incompatibles.";
+
+        value=matrixMul(A,B);
+        title="A × B";
+
+        break;
+
+
+      case "transposeA":
+
+        value=matrixTranspose(A);
+        title="Aᵀ";
+
+        break;
+
+
+      case "transposeB":
+
+        if(!validMatrix(B))
+          throw "Matrice B invalide.";
+
+        value=matrixTranspose(B);
+        title="Bᵀ";
+
+        break;
+
+
+      case "detA":
+
+        value=matrixDet(A);
+
+        if(value===null)
+          throw "A doit être carrée.";
+
+        title="det(A)";
+
+        break;
+
+
+      case "detB":
+
+        if(!validMatrix(B))
+          throw "Matrice B invalide.";
+
+        value=matrixDet(B);
+
+        if(value===null)
+          throw "B doit être carrée.";
+
+        title="det(B)";
+
+        break;
+
+
+      case "inverseA":
+
+        value=matrixInverse(A);
+
+        if(value===null)
+          throw "A n'est pas inversible.";
+
+        title="A⁻¹";
+
+        break;
+
+
+      case "inverseB":
+
+        if(!validMatrix(B))
+          throw "Matrice B invalide.";
+
+        value=matrixInverse(B);
+
+        if(value===null)
+          throw "B n'est pas inversible.";
+
+        title="B⁻¹";
+
+        break;
+
+
+      case "traceA":
+
+        value=matrixTrace(A);
+
+        if(value===null)
+          throw "A doit être carrée.";
+
+        title="Tr(A)";
+
+        break;
+
+
+      case "rankA":
+
+        value=matrixRank(A);
+        title="rang(A)";
+
+        break;
+    }
+
+    result.innerHTML=`
+
+      <div class="card">
+
+        <h3>📐 ${title}</h3>
+
+        ${matrixHTML(value)}
+
+      </div>
+
+    `;
+
+  }catch(error){
+
+    result.innerHTML=`
+
+      <div class="card">
+
+        ❌ ${error}
+
+      </div>
+
+    `;
+  }
+}
+
+
+/* =========================================================
+   SYSTÈME 2×2 PAR MATRICE
+   ========================================================= */
+
+function solveMatrixSystem(){
+
+  const a=Number(
+    document.getElementById("sysA").value
+  );
+
+  const b=Number(
+    document.getElementById("sysB").value
+  );
+
+  const c=Number(
+    document.getElementById("sysC").value
+  );
+
+  const d=Number(
+    document.getElementById("sysD").value
+  );
+
+  const e=Number(
+    document.getElementById("sysE").value
+  );
+
+  const f=Number(
+    document.getElementById("sysF").value
+  );
+
+  const result=
+    document.getElementById(
+      "matrixSystemResult"
+    );
+
+  if(
+    ![
+      a,b,c,d,e,f
+    ].every(Number.isFinite)
+  ){
+
+    result.innerHTML=`
+      <div class="card">
+        ❌ Tous les coefficients doivent être numériques.
+      </div>
+    `;
+
+    return;
+  }
+
+  const A=[
+    [a,b],
+    [d,e]
+  ];
+
+  const B=[
+    [c],
+    [f]
+  ];
+
+  const det=matrixDet(A);
+
+  if(Math.abs(det)<1e-12){
+
+    result.innerHTML=`
+      <div class="card">
+
+        <h3>⚠️ Résultat</h3>
+
+        <p>
+          Le déterminant est nul :
+          <b>det(A)=0</b>.
+        </p>
+
+        <p>
+          Le système ne possède pas de solution unique.
+        </p>
+
+      </div>
+    `;
+
+    return;
+  }
+
+  const inv=matrixInverse(A);
+
+  const X=matrixMul(inv,B);
+
+  result.innerHTML=`
+
+    <div class="card">
+
+      <h3>🎯 Solution du système</h3>
+
+      <p>
+        AX = B
+      </p>
+
+      <p>
+        det(A) =
+        <b>${formatN(det)}</b>
+      </p>
+
+      <p>
+        A⁻¹ =
+        ${matrixHTML(inv)}
+      </p>
+
+      <p>
+        X = A⁻¹B
+      </p>
+
+      <p>
+        ${matrixHTML(X)}
+      </p>
+
+      <p class="demo-solution">
+        x = ${formatN(X[0][0])}<br>
+        y = ${formatN(X[1][0])}
+      </p>
+
+    </div>
 
   `;
 }
