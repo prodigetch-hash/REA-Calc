@@ -157,6 +157,43 @@
     </div>
   </div>
 </section>
+  <section id="conv" class="panel">
+  <div class="card">
+    <h2>🔄 Conversions</h2>
+
+    <select id="convType" class="input" onchange="updateUnits()">
+      <option value="length">📏 Longueur</option>
+      <option value="mass">⚖️ Masse</option>
+      <option value="temperature">🌡️ Température</option>
+      <option value="time">⏱️ Temps</option>
+    </select>
+
+    <input
+      id="convValue"
+      class="input"
+      type="number"
+      placeholder="Valeur"
+      style="margin-top:8px"
+    >
+
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <select id="convFrom" class="input"></select>
+      <select id="convTo" class="input"></select>
+    </div>
+
+    <button class="action" onclick="convertUnit()">
+      Convertir
+    </button>
+
+    <div
+      id="convResult"
+      style="margin-top:16px;
+             font-size:22px;
+             font-weight:800;
+             text-align:center">
+    </div>
+  </div>
+</section>
 <nav class="nav"><button data-id="base"><b>🔢</b>Base b</button><button data-id="demo"><b>∴</b>Démonstration</button><button data-id="sci"><b>✖️</b>Scientifique</button><button data-id="pixels"><b>🖼️</b>Pixels</button><button data-id="map"><b>🗺️</b>Cartographie</button><button data-id="conv"><b>🔄</b>Conversions</button></nav></main>
 <script>let exp='';const E=document.getElementById('expr'),R=document.getElementById('result');function show(){E.textContent=exp.replaceAll('*','×').replaceAll('/','÷')}function add(x){exp+=x;R.textContent=exp;show()}function clearAll(){exp='';R.textContent='0';show()}function back(){exp=exp.slice(0,-1);R.textContent=exp||'0';show()}function calculate(){try{let x=exp.replaceAll('π','Math.PI').replaceAll('^2','**').replaceAll('√','Math.sqrt').replaceAll('sin','Math.sin').replaceAll('cos','Math.cos').replaceAll('tan','Math.tan').replaceAll('ln','Math.log');let v=Function('return ('+x+')')();if(!Number.isFinite(v))throw 0;R.textContent=Number.isInteger(v)?v:Number(v.toFixed(12))}catch{R.textContent='Erreur'}}function activate(id){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('[data-id]').forEach(b=>b.classList.toggle('active',b.dataset.id===id))}document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>activate(b.dataset.id));function convertBase(){
   try{
@@ -410,4 +447,105 @@ function convertBase(){
   result.innerHTML =
     `${coefficient.toPrecision(10).replace(/\.?0+$/,"")} × 10<sup>${exponent}</sup>`;
 }
+  const conversionUnits = {
+  length: ["m","km","cm","mm","mi","ft","in"],
+  mass: ["kg","g","mg","lb","oz"],
+  temperature: ["°C","°F","K"],
+  time: ["s","min","h","day"]
+};
+
+function updateUnits(){
+
+  const type = document.getElementById("convType").value;
+  const from = document.getElementById("convFrom");
+  const to = document.getElementById("convTo");
+
+  from.innerHTML = "";
+  to.innerHTML = "";
+
+  conversionUnits[type].forEach(unit => {
+
+    from.innerHTML += `<option value="${unit}">${unit}</option>`;
+    to.innerHTML += `<option value="${unit}">${unit}</option>`;
+
+  });
+
+  if(to.options.length > 1){
+    to.selectedIndex = 1;
+  }
+}
+
+function convertUnit(){
+
+  const type = document.getElementById("convType").value;
+  const value = Number(document.getElementById("convValue").value);
+  const from = document.getElementById("convFrom").value;
+  const to = document.getElementById("convTo").value;
+  const result = document.getElementById("convResult");
+
+  if(!Number.isFinite(value)){
+    result.textContent = "Entre une valeur.";
+    return;
+  }
+
+  let converted;
+
+  if(type === "length"){
+
+    const units = {
+      m:1,
+      km:1000,
+      cm:0.01,
+      mm:0.001,
+      mi:1609.344,
+      ft:0.3048,
+      in:0.0254
+    };
+
+    converted = value * units[from] / units[to];
+  }
+
+  else if(type === "mass"){
+
+    const units = {
+      kg:1,
+      g:0.001,
+      mg:0.000001,
+      lb:0.45359237,
+      oz:0.028349523125
+    };
+
+    converted = value * units[from] / units[to];
+  }
+
+  else if(type === "time"){
+
+    const units = {
+      s:1,
+      min:60,
+      h:3600,
+      day:86400
+    };
+
+    converted = value * units[from] / units[to];
+  }
+
+  else if(type === "temperature"){
+
+    let celsius;
+
+    if(from === "°C") celsius = value;
+    if(from === "°F") celsius = (value - 32) * 5/9;
+    if(from === "K") celsius = value - 273.15;
+
+    if(to === "°C") converted = celsius;
+    if(to === "°F") converted = celsius * 9/5 + 32;
+    if(to === "K") converted = celsius + 273.15;
+  }
+
+  result.textContent =
+    `${value} ${from} = ${Number(converted.toFixed(10))} ${to}`;
+}
+
+updateUnits();
 </script></body></html>
