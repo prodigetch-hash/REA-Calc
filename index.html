@@ -5,29 +5,45 @@
 <section id="calc" class="panel active"><div class="display"><div class="expr" id="expr"></div><div class="result" id="result">0</div></div><div class="quick"><button class="key soft" onclick="add('√(')">√</button><button class="key soft" onclick="add('^2')">x²</button><button class="key soft" onclick="add('π')">π</button><button class="key soft" onclick="add('e')">e</button></div><div class="keys"><button class="key pink" onclick="clearAll()">AC</button><button class="key" onclick="add('(')">(</button><button class="key" onclick="add(')')">)</button><button class="key pink" onclick="add('/')">÷</button><button class="key" onclick="add('7')">7</button><button class="key" onclick="add('8')">8</button><button class="key" onclick="add('9')">9</button><button class="key pink" onclick="add('*')">×</button><button class="key" onclick="add('4')">4</button><button class="key" onclick="add('5')">5</button><button class="key" onclick="add('6')">6</button><button class="key pink" onclick="add('-')">−</button><button class="key" onclick="add('1')">1</button><button class="key" onclick="add('2')">2</button><button class="key" onclick="add('3')">3</button><button class="key pink" onclick="add('+')">+</button><button class="key" onclick="add('0')">0</button><button class="key" onclick="add('.')">.</button><button class="key" onclick="back()">⌫</button><button class="key pink" onclick="calculate()">=</button></div></section>
 <section id="second" class="panel"><div class="card"><h2>² Seconde fonction</h2><div class="quick"><button class="key" onclick="add('sin(')">sin</button><button class="key" onclick="add('cos(')">cos</button><button class="key" onclick="add('tan(')">tan</button><button class="key" onclick="add('ln(')">ln</button></div></div></section>
 <section id="function" class="panel">
+
   <div class="card">
+
     <h2>📈 Étude de ma fonction</h2>
 
     <input
       id="functionInput"
       class="input"
-      value="x² - 4x + 3"
-      placeholder="Ex. x² - 4x + 3"
+      placeholder="Ex. x^2 - 4x + 3"
     >
 
-    <button class="action" onclick="analyzeFunction()">
-      Analyser la fonction
+    <button
+      class="action"
+      onclick="analyzeFunction()">
+      🔍 Analyser la fonction
     </button>
+
   </div>
 
-  <div id="functionResult"></div>
+  <div id="functionAnalysis"></div>
 
   <div class="card">
-    <h3>📉 Courbe</h3>
-    <canvas id="functionCanvas" width="480" height="300"
-      style="width:100%;background:#0c090d;border-radius:14px;">
+
+    <h3>📊 Courbe</h3>
+
+    <canvas
+      id="functionCanvas"
+      width="490"
+      height="360"
+      style="
+        width:100%;
+        background:#0c090d;
+        border-radius:16px;
+        border:1px solid #30212b;
+      ">
     </canvas>
+
   </div>
+
 </section>
 <section id="equations" class="panel"><div class="card"><h2>🟰 Équations</h2><input class="input" placeholder="Ex. 2x + 6 = 14"><button class="action">Résoudre</button></div></section>
 <section id="matrices" class="panel"><div class="card"><h2>🔲 Matrices</h2><p>Addition · multiplication · déterminant · inverse · transposée</p></div></section>
@@ -1325,5 +1341,717 @@ function demoCard(icon,title,content=""){
       <div>${content}</div>
     </div>
   `;
+}
+  /* =========================================================
+   RÉA-CALC — ÉTUDE AUTOMATIQUE DE FONCTION V2
+   ========================================================= */
+
+function analyzeFunction(){
+
+  const input = document
+    .getElementById("functionInput")
+    .value
+    .trim()
+    .replace(/\s+/g,"");
+
+  const output =
+    document.getElementById("functionAnalysis");
+
+  if(!input){
+
+    output.innerHTML = `
+      <div class="card">
+        ⚠️ Entre une fonction, par exemple :
+        <b>x^2-4x+3</b>
+      </div>
+    `;
+
+    return;
+  }
+
+  const p = parsePolynomialAdvanced(input);
+
+  if(!p){
+
+    output.innerHTML = `
+      <div class="card">
+        ❌ Fonction non reconnue.
+        <br><br>
+        Pour cette version, utilise un polynôme comme :
+        <br><br>
+        <b>x^2-4x+3</b>
+        <br>
+        <b>2x^2+3x-5</b>
+        <br>
+        <b>-x^2+4x</b>
+      </div>
+    `;
+
+    return;
+  }
+
+  const a = p.a2;
+  const b = p.a;
+  const c = p.c;
+
+  let html = "";
+
+  /* =========================
+     DOMAINE
+     ========================= */
+
+  html += `
+    <div class="card">
+
+      <h3>📌 Domaine</h3>
+
+      <p>
+        La fonction est un polynôme.
+      </p>
+
+      <p>
+        <b>D<sub>f</sub> = ℝ</b>
+      </p>
+
+    </div>
+  `;
+
+  /* =========================
+     FONCTION
+     ========================= */
+
+  html += `
+    <div class="card">
+
+      <h3>📝 Fonction</h3>
+
+      <p>
+        f(x) = <b>${formatQuadraticAdvanced(a,b,c)}</b>
+      </p>
+
+    </div>
+  `;
+
+  /* =========================
+     CONSTANTE
+     ========================= */
+
+  if(a === 0 && b === 0){
+
+    html += `
+      <div class="card">
+
+        <h3>📊 Analyse</h3>
+
+        <p>
+          Fonction constante :
+          <b>f(x) = ${formatN(c)}</b>
+        </p>
+
+      </div>
+    `;
+
+    output.innerHTML = html;
+
+    drawFunctionCurve(a,b,c);
+
+    return;
+  }
+
+  /* =========================
+     DÉRIVÉE
+     ========================= */
+
+  const derivative =
+    `${formatN(2*a)}x ${b >= 0 ? "+" : "−"} ${Math.abs(b)}`;
+
+  html += `
+    <div class="card">
+
+      <h3>📐 Dérivée</h3>
+
+      <p>
+        f'(x) = <b>${derivative}</b>
+      </p>
+
+    </div>
+  `;
+
+  /* =========================
+     PREMIER DEGRÉ
+     ========================= */
+
+  if(a === 0){
+
+    const root = -c/b;
+
+    html += `
+      <div class="card">
+
+        <h3>🎯 Racine</h3>
+
+        <p>
+          f(x) = 0
+        </p>
+
+        <p>
+          x = −c/b
+        </p>
+
+        <p class="demo-solution">
+          x = ${formatN(root)}
+        </p>
+
+      </div>
+    `;
+
+    html += `
+      <div class="card">
+
+        <h3>📈 Variations</h3>
+
+        <p>
+          f'(x) = ${formatN(b)}
+        </p>
+
+        <p>
+          ${
+            b > 0
+            ? "La fonction est strictement croissante sur ℝ."
+            : "La fonction est strictement décroissante sur ℝ."
+          }
+        </p>
+
+      </div>
+    `;
+
+    output.innerHTML = html;
+
+    drawFunctionCurve(a,b,c);
+
+    return;
+  }
+
+  /* =========================
+     SECOND DEGRÉ
+     ========================= */
+
+  const delta = b*b - 4*a*c;
+
+  html += `
+    <div class="card">
+
+      <h3>Δ Discriminant</h3>
+
+      <p>
+        Δ = b² − 4ac
+      </p>
+
+      <p>
+        Δ =
+        (${formatN(b)})²
+        − 4 × ${formatN(a)}
+        × ${formatN(c)}
+      </p>
+
+      <p>
+        <b>Δ = ${formatN(delta)}</b>
+      </p>
+
+    </div>
+  `;
+
+  /* =========================
+     RACINES
+     ========================= */
+
+  if(delta > 0){
+
+    const sqrtDelta = Math.sqrt(delta);
+
+    const x1 =
+      (-b - sqrtDelta)/(2*a);
+
+    const x2 =
+      (-b + sqrtDelta)/(2*a);
+
+    const roots =
+      x1 < x2
+      ? [x1,x2]
+      : [x2,x1];
+
+    html += `
+      <div class="card">
+
+        <h3>🎯 Racines</h3>
+
+        <p>
+          x₁ = ${formatN(roots[0])}
+        </p>
+
+        <p>
+          x₂ = ${formatN(roots[1])}
+        </p>
+
+      </div>
+    `;
+
+  }
+
+  else if(Math.abs(delta) < 1e-12){
+
+    const x0 =
+      -b/(2*a);
+
+    html += `
+      <div class="card">
+
+        <h3>🎯 Racine double</h3>
+
+        <p>
+          x₀ = ${formatN(x0)}
+        </p>
+
+      </div>
+    `;
+
+  }
+
+  else{
+
+    html += `
+      <div class="card">
+
+        <h3>🎯 Racines</h3>
+
+        <p>
+          Δ &lt; 0
+        </p>
+
+        <p>
+          La fonction ne possède aucune racine réelle.
+        </p>
+
+      </div>
+    `;
+  }
+
+  /* =========================
+     SOMMET
+     ========================= */
+
+  const xv =
+    -b/(2*a);
+
+  const yv =
+    a*xv*xv + b*xv + c;
+
+  html += `
+    <div class="card">
+
+      <h3>⭐ Sommet / Extremum</h3>
+
+      <p>
+        x<sub>S</sub> = −b/(2a)
+      </p>
+
+      <p>
+        x<sub>S</sub> =
+        <b>${formatN(xv)}</b>
+      </p>
+
+      <p>
+        y<sub>S</sub> =
+        <b>${formatN(yv)}</b>
+      </p>
+
+      <p>
+        <span class="demo-solution">
+          S(${formatN(xv)} ; ${formatN(yv)})
+        </span>
+      </p>
+
+      <p>
+        ${
+          a > 0
+          ? "Minimum"
+          : "Maximum"
+        }
+      </p>
+
+    </div>
+  `;
+
+  /* =========================
+     VARIATIONS
+     ========================= */
+
+  html += `
+    <div class="card">
+
+      <h3>📈 Variations</h3>
+
+      ${
+        a > 0
+        ? `
+          <p>
+            f'(x) &lt; 0 pour x &lt; ${formatN(xv)}
+          </p>
+
+          <p>
+            f'(x) = 0 pour x = ${formatN(xv)}
+          </p>
+
+          <p>
+            f'(x) &gt; 0 pour x &gt; ${formatN(xv)}
+          </p>
+
+          <p>
+            📉 Décroissante sur
+            ]−∞ ; ${formatN(xv)}[
+          </p>
+
+          <p>
+            📈 Croissante sur
+            ]${formatN(xv)} ; +∞[
+          </p>
+        `
+        : `
+          <p>
+            f'(x) &gt; 0 pour x &lt; ${formatN(xv)}
+          </p>
+
+          <p>
+            f'(x) = 0 pour x = ${formatN(xv)}
+          </p>
+
+          <p>
+            f'(x) &lt; 0 pour x &gt; ${formatN(xv)}
+          </p>
+
+          <p>
+            📈 Croissante sur
+            ]−∞ ; ${formatN(xv)}[
+          </p>
+
+          <p>
+            📉 Décroissante sur
+            ]${formatN(xv)} ; +∞[
+          </p>
+        `
+      }
+
+    </div>
+  `;
+
+  /* =========================
+     ORDONNÉE À L'ORIGINE
+     ========================= */
+
+  html += `
+    <div class="card">
+
+      <h3>📍 Point sur l'axe Y</h3>
+
+      <p>
+        f(0) = ${formatN(c)}
+      </p>
+
+      <p>
+        <b>O<sub>y</sub>(0 ; ${formatN(c)})</b>
+      </p>
+
+    </div>
+  `;
+
+  output.innerHTML = html;
+
+  /* =========================
+     COURBE
+     ========================= */
+
+  drawFunctionCurve(a,b,c);
+}
+
+
+/* =========================================================
+   DESSIN DE LA COURBE
+   ========================================================= */
+
+function drawFunctionCurve(a,b,c){
+
+  const canvas =
+    document.getElementById("functionCanvas");
+
+  if(!canvas) return;
+
+  const ctx =
+    canvas.getContext("2d");
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  ctx.clearRect(0,0,W,H);
+
+  /* =========================
+     REPÈRE
+     ========================= */
+
+  const scaleX = 45;
+  const scaleY = 45;
+
+  const originX = W/2;
+  const originY = H/2;
+
+  /* grille */
+
+  ctx.strokeStyle = "#211923";
+  ctx.lineWidth = 1;
+
+  for(let x=originX % scaleX;
+      x<W;
+      x+=scaleX){
+
+    ctx.beginPath();
+    ctx.moveTo(x,0);
+    ctx.lineTo(x,H);
+    ctx.stroke();
+  }
+
+  for(let y=originY % scaleY;
+      y<H;
+      y+=scaleY){
+
+    ctx.beginPath();
+    ctx.moveTo(0,y);
+    ctx.lineTo(W,y);
+    ctx.stroke();
+  }
+
+  /* =========================
+     AXES
+     ========================= */
+
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+
+  /* axe X */
+
+  ctx.beginPath();
+
+  ctx.moveTo(0,originY);
+  ctx.lineTo(W,originY);
+
+  ctx.stroke();
+
+  /* axe Y */
+
+  ctx.beginPath();
+
+  ctx.moveTo(originX,0);
+  ctx.lineTo(originX,H);
+
+  ctx.stroke();
+
+  /* =========================
+     FLÈCHES
+     ========================= */
+
+  ctx.beginPath();
+
+  ctx.moveTo(W-10,originY-5);
+  ctx.lineTo(W,originY);
+  ctx.lineTo(W-10,originY+5);
+
+  ctx.stroke();
+
+  ctx.beginPath();
+
+  ctx.moveTo(originX-5,10);
+  ctx.lineTo(originX,0);
+  ctx.lineTo(originX+5,10);
+
+  ctx.stroke();
+
+  /* =========================
+     GRADUATIONS
+     ========================= */
+
+  ctx.fillStyle = "#aaa";
+  ctx.font = "11px Arial";
+
+  ctx.strokeStyle = "#aaa";
+  ctx.lineWidth = 1;
+
+  for(let i=-10;i<=10;i++){
+
+    if(i === 0) continue;
+
+    const px =
+      originX + i*scaleX;
+
+    if(px>=0 && px<=W){
+
+      ctx.beginPath();
+
+      ctx.moveTo(px,originY-5);
+      ctx.lineTo(px,originY+5);
+
+      ctx.stroke();
+
+      ctx.fillText(
+        i,
+        px-4,
+        originY+18
+      );
+    }
+  }
+
+  for(let i=-5;i<=5;i++){
+
+    if(i === 0) continue;
+
+    const py =
+      originY - i*scaleY;
+
+    if(py>=0 && py<=H){
+
+      ctx.beginPath();
+
+      ctx.moveTo(originX-5,py);
+      ctx.lineTo(originX+5,py);
+
+      ctx.stroke();
+
+      ctx.fillText(
+        i,
+        originX+8,
+        py+4
+      );
+    }
+  }
+
+  /* =========================
+     COURBE
+     ========================= */
+
+  ctx.beginPath();
+
+  let started = false;
+
+  for(let px=0;px<=W;px++){
+
+    const x =
+      (px-originX)/scaleX;
+
+    const y =
+      a*x*x + b*x + c;
+
+    const py =
+      originY - y*scaleY;
+
+    if(
+      Number.isFinite(py) &&
+      py>-10000 &&
+      py<10000
+    ){
+
+      if(!started){
+
+        ctx.moveTo(px,py);
+        started = true;
+
+      }else{
+
+        ctx.lineTo(px,py);
+      }
+    }
+  }
+
+  ctx.strokeStyle = "#ff4fa3";
+  ctx.lineWidth = 3;
+
+  ctx.stroke();
+
+  /* =========================
+     SOMMET
+     ========================= */
+
+  if(a !== 0){
+
+    const xv =
+      -b/(2*a);
+
+    const yv =
+      a*xv*xv+b*xv+c;
+
+    const px =
+      originX+xv*scaleX;
+
+    const py =
+      originY-yv*scaleY;
+
+    if(
+      px>=0 &&
+      px<=W &&
+      py>=0 &&
+      py<=H
+    ){
+
+      ctx.beginPath();
+
+      ctx.arc(
+        px,
+        py,
+        6,
+        0,
+        Math.PI*2
+      );
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+
+      ctx.font = "bold 12px Arial";
+      ctx.fillStyle = "#ffffff";
+
+      ctx.fillText(
+        `S(${formatN(xv)} ; ${formatN(yv)})`,
+        px+9,
+        py-9
+      );
+    }
+  }
+
+  /* =========================
+     POINT ORIGINE
+     ========================= */
+
+  const py0 =
+    originY-c*scaleY;
+
+  if(
+    py0>=0 &&
+    py0<=H
+  ){
+
+    ctx.beginPath();
+
+    ctx.arc(
+      originX,
+      py0,
+      5,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+
+    ctx.fillText(
+      `(0 ; ${formatN(c)})`,
+      originX+8,
+      py0-8
+    );
+  }
 }
 </script></body></html>
