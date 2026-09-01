@@ -446,29 +446,55 @@ function scientific(){
 
   document.getElementById('sciResult').textContent =
     "Résultat : " + number.toExponential(8);
-}function analyzeFunction(){
+}
+function analyzeFunction(){
 
   let f = document.getElementById("functionInput").value
     .toLowerCase()
     .replaceAll(" ","")
     .replaceAll("²","^2");
 
-  const result = document.getElementById("functionResult");
+  const result =
+    document.getElementById("functionAnalysis");
 
-  // Reconnaissance d'un trinôme ax² + bx + c
+  if(!f){
+
+    result.innerHTML = `
+      <div class="card">
+        <h3>⚠️ Aucune fonction</h3>
+        <p>Entre une fonction à étudier.</p>
+      </div>
+    `;
+
+    return;
+  }
+
+  /* Reconnaissance d'un trinôme ax² + bx + c */
+
   const match = f.match(
     /^([+-]?\d*\.?\d*)x\^2([+-]\d*\.?\d*)x([+-]\d*\.?\d*)$/
   );
 
   if(!match){
+
     result.innerHTML = `
       <div class="card">
         <h3>⚠️ Fonction non reconnue</h3>
-        <p>Pour la V1, entre une fonction sous la forme :</p>
+
+        <p>
+          Pour le moment, RÉA-Calc reconnaît les fonctions
+          polynomiales du second degré :
+        </p>
+
         <p><b>ax² + bx + c</b></p>
-        <p>Exemple : <b>x² - 4x + 3</b></p>
+
+        <p>Exemple :</p>
+
+        <p><b>x² - 4x + 3</b></p>
+
       </div>
     `;
+
     return;
   }
 
@@ -487,70 +513,154 @@ function scientific(){
 
   let roots = "";
 
+  /* =========================
+     RACINES
+     ========================= */
+
   if(delta > 0){
-    const x1 = (-b - Math.sqrt(delta))/(2*a);
-    const x2 = (-b + Math.sqrt(delta))/(2*a);
+
+    const x1 =
+      (-b - Math.sqrt(delta))/(2*a);
+
+    const x2 =
+      (-b + Math.sqrt(delta))/(2*a);
 
     roots = `
-      <p><b>Racines :</b>
-      x₁ = ${formatNumber(x1)},
-      x₂ = ${formatNumber(x2)}</p>
+      <p>
+        <b>Racines :</b><br>
+        x₁ = ${formatNumber(x1)}<br>
+        x₂ = ${formatNumber(x2)}
+      </p>
     `;
   }
+
   else if(delta === 0){
 
     const x = -b/(2*a);
 
     roots = `
-      <p><b>Racine double :</b>
-      x₀ = ${formatNumber(x)}</p>
+      <p>
+        <b>Racine double :</b>
+        x₀ = ${formatNumber(x)}
+      </p>
     `;
   }
+
   else{
-    roots = `<p><b>Racines :</b> aucune racine réelle.</p>`;
+
+    roots = `
+      <p>
+        <b>Racines :</b>
+        aucune racine réelle.
+      </p>
+    `;
   }
 
+  /* =========================
+     SOMMET
+     ========================= */
+
   const xv = -b/(2*a);
-  const yv = a*xv*xv + b*xv + c;
+
+  const yv =
+    a*xv*xv +
+    b*xv +
+    c;
+
+  /* =========================
+     EXTREMUM
+     ========================= */
 
   const extremum =
     a > 0
       ? `minimum : ${formatNumber(yv)}`
       : `maximum : ${formatNumber(yv)}`;
 
+  /* =========================
+     VARIATIONS
+     ========================= */
+
   const variations =
     a > 0
-      ? `décroissante sur ]−∞ ; ${formatNumber(xv)}] puis croissante sur [${formatNumber(xv)} ; +∞[`
-      : `croissante sur ]−∞ ; ${formatNumber(xv)}] puis décroissante sur [${formatNumber(xv)} ; +∞[`;
+
+      ? `
+        décroissante sur
+        ]−∞ ; ${formatNumber(xv)}]
+        puis croissante sur
+        [${formatNumber(xv)} ; +∞[
+      `
+
+      : `
+        croissante sur
+        ]−∞ ; ${formatNumber(xv)}]
+        puis décroissante sur
+        [${formatNumber(xv)} ; +∞[
+      `;
+
+  /* =========================
+     ANALYSE
+     ========================= */
 
   result.innerHTML = `
+
     <div class="card">
-      <h3>📋 Résultats</h3>
 
-      <p><b>Fonction :</b> f(x) = ${f}</p>
+      <h3>📋 Étude complète</h3>
 
-      <p><b>Domaine :</b> ℝ</p>
+      <p>
+        <b>Fonction :</b>
+        f(x) = ${f}
+      </p>
 
-      <p><b>Dérivée :</b>
-      f'(x) = ${formatNumber(2*a)}x ${b >= 0 ? "+" : "−"} ${Math.abs(b)}</p>
+      <p>
+        <b>Domaine de définition :</b>
+        ℝ
+      </p>
 
-      <p><b>Discriminant :</b>
-      Δ = ${formatNumber(delta)}</p>
+      <p>
+        <b>Dérivée :</b>
+        f'(x) =
+        ${formatNumber(2*a)}x
+        ${b >= 0 ? "+" : "−"}
+        ${Math.abs(b)}
+      </p>
+
+      <p>
+        <b>Discriminant :</b>
+        Δ = ${formatNumber(delta)}
+      </p>
 
       ${roots}
 
-      <p><b>Sommet :</b>
-      S(${formatNumber(xv)} ; ${formatNumber(yv)})</p>
+      <p>
+        <b>Sommet :</b>
+        S(
+        ${formatNumber(xv)}
+        ;
+        ${formatNumber(yv)}
+        )
+      </p>
 
-      <p><b>Extremum :</b> ${extremum}</p>
+      <p>
+        <b>Extremum :</b>
+        ${extremum}
+      </p>
 
-      <p><b>Variations :</b> ${variations}</p>
+      <p>
+        <b>Variations :</b><br>
+        ${variations}
+      </p>
+
     </div>
+
   `;
+
+  /* =========================
+     COURBE
+     ========================= */
 
   drawFunction(a,b,c);
 }
-
 function formatNumber(n){
   if(Number.isInteger(n)) return n;
   return Number(n.toFixed(6));
