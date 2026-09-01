@@ -194,6 +194,29 @@
     </div>
   </div>
 </section>
+  <section id="demo" class="panel">
+  <div class="card">
+    <h2>∴ Démonstration</h2>
+
+    <input
+      id="demoEquation"
+      class="input"
+      type="text"
+      placeholder="Ex. 2x + 6 = 14"
+    >
+
+    <button class="action" onclick="demonstrateEquation()">
+      Démontrer
+    </button>
+
+    <div
+      id="demoResult"
+      style="margin-top:16px;
+             font-size:16px;
+             line-height:1.8">
+    </div>
+  </div>
+</section>
 <nav class="nav"><button data-id="base"><b>🔢</b>Base b</button><button data-id="demo"><b>∴</b>Démonstration</button><button data-id="sci"><b>✖️</b>Scientifique</button><button data-id="pixels"><b>🖼️</b>Pixels</button><button data-id="map"><b>🗺️</b>Cartographie</button><button data-id="conv"><b>🔄</b>Conversions</button></nav></main>
 <script>let exp='';const E=document.getElementById('expr'),R=document.getElementById('result');function show(){E.textContent=exp.replaceAll('*','×').replaceAll('/','÷')}function add(x){exp+=x;R.textContent=exp;show()}function clearAll(){exp='';R.textContent='0';show()}function back(){exp=exp.slice(0,-1);R.textContent=exp||'0';show()}function calculate(){try{let x=exp.replaceAll('π','Math.PI').replaceAll('^2','**').replaceAll('√','Math.sqrt').replaceAll('sin','Math.sin').replaceAll('cos','Math.cos').replaceAll('tan','Math.tan').replaceAll('ln','Math.log');let v=Function('return ('+x+')')();if(!Number.isFinite(v))throw 0;R.textContent=Number.isInteger(v)?v:Number(v.toFixed(12))}catch{R.textContent='Erreur'}}function activate(id){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('[data-id]').forEach(b=>b.classList.toggle('active',b.dataset.id===id))}document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>activate(b.dataset.id));function convertBase(){
   try{
@@ -548,4 +571,47 @@ function convertUnit(){
 }
 
 updateUnits();
+  function demonstrateEquation(){
+
+  const input = document
+    .getElementById("demoEquation")
+    .value
+    .trim();
+
+  const result = document.getElementById("demoResult");
+
+  if(!input){
+    result.textContent = "Entre une équation.";
+    return;
+  }
+
+  const parts = input.split("=");
+
+  if(parts.length !== 2){
+    result.textContent =
+      "Écris une équation sous la forme : gauche = droite";
+    return;
+  }
+
+  let left = parts[0].trim();
+  let right = parts[1].trim();
+
+  result.innerHTML = `
+    <div class="card">
+      <b>Étape 1 — Équation initiale</b><br>
+      ${left} = ${right}
+    </div>
+
+    <div class="card">
+      <b>Étape 2 — Regrouper les termes</b><br>
+      On cherche à isoler <b>x</b>.
+    </div>
+
+    <div class="card">
+      <b>Étape 3 — Résultat</b><br>
+      Utilise l'onglet <b>🟰 Équations</b>
+      pour obtenir automatiquement la solution.
+    </div>
+  `;
+}
 </script></body></html>
